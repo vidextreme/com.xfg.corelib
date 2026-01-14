@@ -1,1 +1,1 @@
-# simple-core
+# XFG Simple Core Game Library
