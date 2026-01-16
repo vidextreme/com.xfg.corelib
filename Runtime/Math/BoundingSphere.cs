@@ -1,7 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Drawing;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 namespace XFG.Math
 {
@@ -45,6 +42,13 @@ namespace XFG.Math
         public const float EPSILON_CONTAIN = 1e-6f;
         public const float EPSILON_DEGENERATE = 1e-12f;
 
+        private static System.Random _random = new System.Random(9001); // default deterministic seed
+
+        public static void SetRandomSeed(int seed)
+        {
+            _random = new System.Random(seed);
+        }
+
         /// <summary>
         /// Iterative Welzl (no recursion)
         /// Stable 4-point circumsphere
@@ -55,19 +59,19 @@ namespace XFG.Math
         /// </summary>
         /// <param name="points"></param>
         /// <returns></returns>
-        public static BoundingSphere Compute(IList<Vector3> points)
+        public static BoundingSphere Compute(ReadOnlySpan<Vector3> points)
         {
-            if (points == null || points.Count == 0)
+            if (points == null || points.Length == 0)
                 return new BoundingSphere(Vector3.zero, 0f);
 
             // Copy and shuffle for expected linear time
-            var pts = new List<Vector3>(points);
+            var pts = points.ToArray();
             Shuffle(pts);
 
             BoundingSphere sphere = new BoundingSphere(pts[0], 0f);
 
             // Iterative Welzl (unrolled recursion)
-            for (int i = 1; i < pts.Count; i++)
+            for (int i = 1; i < pts.Length; i++)
             {
                 Vector3 p = pts[i];
                 if (!sphere.Contains(p))
@@ -176,12 +180,11 @@ namespace XFG.Math
             return new BoundingSphere(center, radius);
         }
 
-        private static void Shuffle(List<Vector3> list)
+        private static void Shuffle(Span<Vector3> list)
         {
-            var rng = new System.Random();
-            for (int i = list.Count - 1; i > 0; i--)
+            for (int i = list.Length - 1; i > 0; i--)
             {
-                int j = rng.Next(i + 1);
+                int j = _random.Next(i + 1);
                 (list[i], list[j]) = (list[j], list[i]);
             }
         }

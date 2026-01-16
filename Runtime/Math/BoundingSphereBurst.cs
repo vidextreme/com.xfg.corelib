@@ -1,10 +1,6 @@
-using Mono.Cecil.Cil;
-using System.Text;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Mathematics;
-using static UnityEditor.PlayerSettings;
-using static UnityEngine.ParticleSystem;
 
 namespace XFG.MathBurst
 {
@@ -40,14 +36,21 @@ namespace XFG.MathBurst
         public const float EPSILON_DEGENERATE = 1e-12f;
 
         /// <summary>
-        /// SIMD-optimized,
-        /// Exact minimal enclosing sphere(Welzl-style),
-        /// No recursion,
-        /// No unsafe code,
-        /// Unity.Mathematics + Burst-friendly
+        /// Computes the exact minimal enclosing sphere for a set of 3D points.
+        /// 
+        /// This is a non-recursive, SIMD-friendly implementation of Welzl's algorithm.
+        /// It incrementally builds the minimal sphere by iterating over points and
+        /// promoting them into the boundary set when they lie outside the current sphere.
+        /// 
+        /// Key properties:
+        /// - Exact solution (not an approximation)
+        /// - Deterministic (no randomization unless added externally)
+        /// - Burst-compatible (no recursion, no unsafe, no allocations)
+        /// - Uses SIMD-leaning float4 math for efficient distance and update operations
+        /// 
+        /// Expected performance is O(n) for typical point distributions, with a worst-case
+        /// O(n^4) boundary promotion pattern - but in practice this is extremely rare.
         /// </summary>
-        /// <param name="points"></param>
-        /// <returns></returns>
         public static BoundingSphereSimd Compute(NativeArray<float3> points)
         {
             int count = points.Length;
