@@ -1,8 +1,11 @@
+// Copyright (c) 2025 Extreme Focus Games
+// Licensed under the MIT License. See LICENSE for details.
+
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Mathematics;
 
-namespace XFG.MathBurst
+namespace XFG.Math.ShapeBurst
 {
     public struct BoundingSphereSimd
     {
@@ -184,5 +187,4 @@ namespace XFG.MathBurst
             return new BoundingSphereSimd(newCenter, newRadius);
         }
     }
-
 }

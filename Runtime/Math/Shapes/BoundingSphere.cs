@@ -1,42 +1,11 @@
+// Copyright (c) 2025 Extreme Focus Games
+// Licensed under the MIT License. See LICENSE for details.
+
 using System;
 using UnityEngine;
-namespace XFG.Math
+
+namespace XFG.Math.Shape
 {
-    public struct BoundingSphere
-    {
-        public Vector3 Center;
-        public float Radius;
-
-        public BoundingSphere(Vector3 c, float r)
-        {
-            Center = c;
-            Radius = r;
-        }
-
-        public bool Contains(Vector3 p)
-        {
-            return (p - Center).sqrMagnitude <= Radius * Radius + MinimalEnclosingSphere.EPSILON_CONTAIN;
-        }
-
-        public BoundingSphere ExpandToInclude(Vector3 p)
-        {
-            if (Contains(p))
-                return this;
-
-            Vector3 dir = p - Center;
-            float dist = dir.magnitude;
-
-            float newRadius = (Radius + dist) * 0.5f;
-            Vector3 newCenter = Center;
-
-            if (dist > MinimalEnclosingSphere.EPSILON_CONTAIN)
-                newCenter += dir.normalized * (newRadius - Radius);
-
-            return new BoundingSphere(newCenter, newRadius);
-        }
-    }
-
-
     public static class MinimalEnclosingSphere
     {
         public const float EPSILON_CONTAIN = 1e-6f;
@@ -57,18 +26,16 @@ namespace XFG.Math
         /// Exact minimal sphere, not an approximation
         /// For Burst performance use XFG.MathBurst.MinimalEnclosingSphereBurst
         /// </summary>
-        /// <param name="points"></param>
-        /// <returns></returns>
-        public static BoundingSphere Compute(ReadOnlySpan<Vector3> points)
+        public static Sphere Compute(ReadOnlySpan<Vector3> points)
         {
             if (points == null || points.Length == 0)
-                return new BoundingSphere(Vector3.zero, 0f);
+                return new Sphere(Vector3.zero, 0f);
 
             // Copy and shuffle for expected linear time
             var pts = points.ToArray();
             Shuffle(pts);
 
-            BoundingSphere sphere = new BoundingSphere(pts[0], 0f);
+            Sphere sphere = new Sphere(pts[0], 0f);
 
             // Iterative Welzl (unrolled recursion)
             for (int i = 1; i < pts.Length; i++)
@@ -76,7 +43,7 @@ namespace XFG.Math
                 Vector3 p = pts[i];
                 if (!sphere.Contains(p))
                 {
-                    sphere = new BoundingSphere(p, 0f);
+                    sphere = new Sphere(p, 0f);
 
                     for (int j = 0; j < i; j++)
                     {
@@ -110,22 +77,20 @@ namespace XFG.Math
             return sphere;
         }
 
-        private static BoundingSphere SphereFrom2(Vector3 a, Vector3 b)
+        private static Sphere SphereFrom2(Vector3 a, Vector3 b)
         {
             Vector3 center = (a + b) * 0.5f;
             float radius = Vector3.Distance(a, b) * 0.5f;
-            return new BoundingSphere(center, radius);
+            return new Sphere(center, radius);
         }
 
-        private static BoundingSphere SphereFrom3(Vector3 a, Vector3 b, Vector3 c)
+        private static Sphere SphereFrom3(Vector3 a, Vector3 b, Vector3 c)
         {
             Vector3 ab = b - a;
             Vector3 ac = c - a;
             Vector3 abXac = Vector3.Cross(ab, ac);
 
             float denom = 2f * abXac.sqrMagnitude;
-            if (denom < EPSILON_DEGENERATE)
-                return SphereFrom2(a, b).ExpandToInclude(c);
 
             Vector3 center =
                 a +
@@ -133,10 +98,10 @@ namespace XFG.Math
                  Vector3.Cross(ac, abXac) * ab.sqrMagnitude) / denom;
 
             float radius = Vector3.Distance(center, a);
-            return new BoundingSphere(center, radius);
+            return new Sphere(center, radius);
         }
 
-        private static BoundingSphere SphereFrom4(Vector3 a, Vector3 b, Vector3 c, Vector3 d)
+        private static Sphere SphereFrom4(Vector3 a, Vector3 b, Vector3 c, Vector3 d)
         {
             Vector3 ab = b - a;
             Vector3 ac = c - a;
@@ -157,9 +122,6 @@ namespace XFG.Math
                 A01 * (A10 * A22 - A12 * A20) +
                 A02 * (A10 * A21 - A11 * A20);
 
-            if (Mathf.Abs(det) < 1e-9f)
-                return SphereFrom3(a, b, c).ExpandToInclude(d);
-
             float invDet = 1f / det;
 
             Vector3 center = new Vector3(
@@ -177,7 +139,7 @@ namespace XFG.Math
             );
 
             float radius = Vector3.Distance(center, a);
-            return new BoundingSphere(center, radius);
+            return new Sphere(center, radius);
         }
 
         private static void Shuffle(Span<Vector3> list)
