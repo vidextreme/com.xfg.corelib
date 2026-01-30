@@ -1,28 +1,29 @@
-// Copyright (c) 2025 Extreme Focus Games
+// Copyright (c) 2025 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
+// ------------------------------------------------------------------------------
+// CylinderExtensions
+// ------------------------------------------------------------------------------
+// Extension methods for Cylinder providing:
+// - Point containment
+// - Shape containment (Sphere, Capsule, Cylinder, Cone)
+// - Deterministic, allocation-free geometric helpers
+//
+// All methods are suitable for Burst jobs and runtime gameplay systems.
+// ------------------------------------------------------------------------------
 
 using UnityEngine;
 
 namespace XFG.Math.Shape
 {
-    // ------------------------------------------------------------------------------
-    // CylinderExtensions
-    // ------------------------------------------------------------------------------
-    // Utility functions for:
-    // - Containment tests
-    //
-    // All functions are deterministic, allocation-free, and Burst-friendly.
-    // ------------------------------------------------------------------------------
-
     public static class CylinderExtensions
     {
-        // ============================================================
-        // CONTAINS: POINT
-        // ============================================================
+        // ==============================================================================
+        // CONTAINS POINT
+        // ==============================================================================
         #region ContainsPoint
 
         /// <summary>
-        /// Returns true if the cylinder fully contains the given point.
+        /// Returns true if the cylinder contains the point.
         /// </summary>
         public static bool Contains(this Cylinder cy, Vector3 p)
         {
@@ -38,14 +39,13 @@ namespace XFG.Math.Shape
 
         #endregion
 
-
-        // ============================================================
-        // CONTAINS: SPHERE
-        // ============================================================
+        // ==============================================================================
+        // CONTAINS SPHERE
+        // ==============================================================================
         #region ContainsSphere
 
         /// <summary>
-        /// Returns true if the cylinder fully contains a sphere.
+        /// Returns true if the cylinder fully contains the sphere.
         /// </summary>
         public static bool Contains(this Cylinder cy, Sphere s)
         {
@@ -65,15 +65,13 @@ namespace XFG.Math.Shape
 
         #endregion
 
-
-        // ============================================================
-        // CONTAINS: CAPSULE
-        // ============================================================
+        // ==============================================================================
+        // CONTAINS CAPSULE
+        // ==============================================================================
         #region ContainsCapsule
 
         /// <summary>
-        /// Returns true if the cylinder fully contains a capsule.
-        /// Approximate: checks endpoints expanded by radius.
+        /// Returns true if the cylinder fully contains the capsule.
         /// </summary>
         public static bool Contains(this Cylinder cy, Capsule c)
         {
@@ -95,15 +93,13 @@ namespace XFG.Math.Shape
 
         #endregion
 
-
-        // ============================================================
-        // CONTAINS: CYLINDER
-        // ============================================================
+        // ==============================================================================
+        // CONTAINS CYLINDER
+        // ==============================================================================
         #region ContainsCylinder
 
         /// <summary>
         /// Returns true if this cylinder fully contains another cylinder.
-        /// Approximate: checks endpoints expanded by radius.
         /// </summary>
         public static bool Contains(this Cylinder cy, Cylinder other)
         {
@@ -125,15 +121,13 @@ namespace XFG.Math.Shape
 
         #endregion
 
-
-        // ============================================================
-        // CONTAINS: CONE
-        // ============================================================
+        // ==============================================================================
+        // CONTAINS CONE
+        // ==============================================================================
         #region ContainsCone
 
         /// <summary>
-        /// Returns true if the cylinder fully contains a finite cone.
-        /// Approximate: checks apex and base center expanded by base radius.
+        /// Returns true if the cylinder fully contains the cone.
         /// </summary>
         public static bool Contains(this Cylinder cy, Cone cone)
         {

@@ -1,26 +1,30 @@
-// Copyright (c) 2025 Extreme Focus Games
+// Copyright (c) 2025 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
+// ------------------------------------------------------------------------------
+// ConeExtensions
+// ------------------------------------------------------------------------------
+// Extension methods for Cone providing:
+// - Point containment
+// - Shape containment (Sphere, Capsule, Cylinder, Cone)
+// - Deterministic, allocation-free geometric helpers
+//
+// All methods are suitable for Burst jobs and runtime gameplay systems.
+// ------------------------------------------------------------------------------
 
 using UnityEngine;
 
 namespace XFG.Math.Shape
 {
-    // ------------------------------------------------------------------------------
-    // ConeExtensions
-    // ------------------------------------------------------------------------------
-    // Utility functions for:
-    // - Containment tests
-    //
-    // All functions are deterministic, allocation-free, and Burst-friendly.
-    // ------------------------------------------------------------------------------
-
     public static class ConeExtensions
     {
-        // ============================================================
-        // HELPERS
-        // ============================================================
+        // ==============================================================================
+        // INTERNAL HELPERS
+        // ==============================================================================
         #region Helpers
 
+        /// <summary>
+        /// Returns the closest point on the cone's axis to the given point.
+        /// </summary>
         private static Vector3 ClosestPointOnConeAxis(this Cone cone, Vector3 p)
         {
             Vector3 dir = cone.Axis.normalized;
@@ -29,6 +33,9 @@ namespace XFG.Math.Shape
             return cone.Apex + dir * t;
         }
 
+        /// <summary>
+        /// Returns the radius of the cone at the given axis point.
+        /// </summary>
         private static float LocalConeRadius(this Cone cone, Vector3 axisPoint)
         {
             float t = Vector3.Dot(axisPoint - cone.Apex, cone.Axis.normalized);
@@ -38,14 +45,13 @@ namespace XFG.Math.Shape
 
         #endregion
 
-
-        // ============================================================
-        // CONTAINS: POINT
-        // ============================================================
+        // ==============================================================================
+        // CONTAINS POINT
+        // ==============================================================================
         #region ContainsPoint
 
         /// <summary>
-        /// Returns true if the cone fully contains the given point.
+        /// Returns true if the cone contains the point.
         /// </summary>
         public static bool Contains(this Cone cone, Vector3 p)
         {
@@ -57,15 +63,13 @@ namespace XFG.Math.Shape
 
         #endregion
 
-
-        // ============================================================
-        // CONTAINS: SPHERE
-        // ============================================================
+        // ==============================================================================
+        // CONTAINS SPHERE
+        // ==============================================================================
         #region ContainsSphere
 
         /// <summary>
-        /// Returns true if the cone fully contains a sphere.
-        /// Approximate: uses local radius minus sphere radius.
+        /// Returns true if the cone fully contains the sphere.
         /// </summary>
         public static bool Contains(this Cone cone, Sphere s)
         {
@@ -81,15 +85,13 @@ namespace XFG.Math.Shape
 
         #endregion
 
-
-        // ============================================================
-        // CONTAINS: CAPSULE
-        // ============================================================
+        // ==============================================================================
+        // CONTAINS CAPSULE
+        // ==============================================================================
         #region ContainsCapsule
 
         /// <summary>
-        /// Returns true if the cone fully contains a capsule.
-        /// Approximate: checks endpoints expanded by radius.
+        /// Returns true if the cone fully contains the capsule.
         /// </summary>
         public static bool Contains(this Cone cone, Capsule c)
         {
@@ -108,15 +110,13 @@ namespace XFG.Math.Shape
 
         #endregion
 
-
-        // ============================================================
-        // CONTAINS: CYLINDER
-        // ============================================================
+        // ==============================================================================
+        // CONTAINS CYLINDER
+        // ==============================================================================
         #region ContainsCylinder
 
         /// <summary>
-        /// Returns true if the cone fully contains a finite cylinder.
-        /// Approximate: checks endpoints expanded by radius.
+        /// Returns true if the cone fully contains the cylinder.
         /// </summary>
         public static bool Contains(this Cone cone, Cylinder cy)
         {
@@ -135,15 +135,13 @@ namespace XFG.Math.Shape
 
         #endregion
 
-
-        // ============================================================
-        // CONTAINS: CONE
-        // ============================================================
+        // ==============================================================================
+        // CONTAINS CONE
+        // ==============================================================================
         #region ContainsCone
 
         /// <summary>
         /// Returns true if this cone fully contains another cone.
-        /// Approximate: checks apex and base center expanded by base radius.
         /// </summary>
         public static bool Contains(this Cone cone, Cone other)
         {
@@ -155,8 +153,12 @@ namespace XFG.Math.Shape
             if (baseLocalRadius < 0f)
                 return false;
 
-            bool apexInside = (other.Apex - apexAxis).sqrMagnitude <= cone.LocalConeRadius(apexAxis) * cone.LocalConeRadius(apexAxis);
-            bool baseInside = (baseCenter - baseAxis).sqrMagnitude <= baseLocalRadius * baseLocalRadius;
+            bool apexInside =
+                (other.Apex - apexAxis).sqrMagnitude <=
+                cone.LocalConeRadius(apexAxis) * cone.LocalConeRadius(apexAxis);
+
+            bool baseInside =
+                (baseCenter - baseAxis).sqrMagnitude <= baseLocalRadius * baseLocalRadius;
 
             return apexInside && baseInside;
         }

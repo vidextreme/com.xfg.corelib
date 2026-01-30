@@ -1,196 +1,162 @@
-// Copyright (c) 2025 Extreme Focus Games
+// Copyright (c) 2025 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
+// ------------------------------------------------------------------------------
+// CylinderCollisionExtensions
+// ------------------------------------------------------------------------------
+// Collision predicates for Cylinder vs:
+// - Sphere
+// - Capsule
+// - Cylinder
+// - Line, Ray
+// - Triangle
+//
+// All methods are deterministic, allocation-free, and suitable for Burst jobs.
+// ------------------------------------------------------------------------------
 
 using UnityEngine;
+using XFG.Math; // Needed for SegmentMath, TriangleMath
 
 namespace XFG.Math.Shape
 {
-    // ------------------------------------------------------------------------------
-    // CylinderCollisionExtensions
-    // ------------------------------------------------------------------------------
-    // Collision routines for Cylinder interactions.
-    //
-    // Provides:
-    // - Cylinder vs Cylinder
-    // - Cylinder vs Sphere
-    // - Cylinder vs Capsule
-    // - Cylinder vs Line
-    // - Cylinder vs Ray
-    // - Cylinder vs Triangle
-    //
-    // All functions are deterministic, allocation-free, and Burst-friendly.
-    // ------------------------------------------------------------------------------
-
     public static class CylinderCollisionExtensions
     {
-        // ============================================================
+        // ==============================================================================
+        // CYLINDER vs SPHERE
+        // ==============================================================================
+        #region CylinderSphere
+
+        /// <summary>
+        /// Returns true if the cylinder intersects the sphere.
+        /// </summary>
+        public static bool Intersects(this Cylinder cy, Sphere s)
+        {
+            return s.Intersects(cy);
+        }
+
+        #endregion
+
+        // ==============================================================================
+        // CYLINDER vs CAPSULE
+        // ==============================================================================
+        #region CylinderCapsule
+
+        /// <summary>
+        /// Returns true if the cylinder intersects the capsule.
+        /// </summary>
+        public static bool Intersects(this Cylinder cy, Capsule c)
+        {
+            return c.Intersects(cy);
+        }
+
+        #endregion
+
+        // ==============================================================================
         // CYLINDER vs CYLINDER
-        // ============================================================
+        // ==============================================================================
         #region CylinderCylinder
 
         /// <summary>
-        /// Returns true if two finite cylinders intersect.
+        /// Returns true if the cylinders intersect.
         /// </summary>
         public static bool Intersects(this Cylinder a, Cylinder b)
         {
             if (a.Contains(b) || b.Contains(a))
                 return true;
 
-            float distSq = SegmentMath.SegmentSegmentDistanceSq(
-                a.P0, a.P1,
-                b.P0, b.P1
-            );
+            Vector3 aP0 = a.P0;
+            Vector3 aP1 = a.P1;
+            Vector3 bP0 = b.P0;
+            Vector3 bP1 = b.P1;
 
+            float distSq = SegmentMath.SegmentSegmentDistanceSq(aP0, aP1, bP0, bP1);
             float r = a.Radius + b.Radius;
+
             return distSq <= r * r;
         }
 
         #endregion
 
-
-        // ============================================================
-        // CYLINDER vs SPHERE
-        // ============================================================
-        #region CylinderSphere
-
-        /// <summary>
-        /// Returns true if a cylinder intersects a sphere.
-        /// </summary>
-        public static bool Intersects(this Cylinder cy, Sphere s)
-        {
-            if (cy.Contains(s) || s.Contains(cy))
-                return true;
-
-            Vector3 axis = cy.P1 - cy.P0;
-            float axisLenSq = Vector3.Dot(axis, axis);
-
-            float t = Vector3.Dot(s.Center - cy.P0, axis) / axisLenSq;
-            t = Mathf.Clamp01(t);
-
-            Vector3 closest = cy.P0 + axis * t;
-
-            float r = cy.Radius + s.Radius;
-            return (s.Center - closest).sqrMagnitude <= r * r;
-        }
-
-        #endregion
-
-
-        // ============================================================
-        // CYLINDER vs CAPSULE
-        // ============================================================
-        #region CylinderCapsule
-
-        /// <summary>
-        /// Returns true if a cylinder intersects a capsule.
-        /// </summary>
-        public static bool Intersects(this Cylinder cy, Capsule c)
-        {
-            if (cy.Contains(c) || c.Contains(cy))
-                return true;
-
-            float distSq = SegmentMath.SegmentSegmentDistanceSq(
-                cy.P0, cy.P1,
-                c.P0, c.P1
-            );
-
-            float r = cy.Radius + c.Radius;
-            return distSq <= r * r;
-        }
-
-        #endregion
-
-
-        // ============================================================
+        // ==============================================================================
         // CYLINDER vs LINE
-        // ============================================================
+        // ==============================================================================
         #region CylinderLine
 
         /// <summary>
-        /// Returns true if an infinite line intersects a finite cylinder.
+        /// Returns true if the infinite line intersects the cylinder.
         /// </summary>
         public static bool Intersects(this Cylinder cy, Vector3 L0, Vector3 Ld)
         {
-            Vector3 L1 = L0 + Ld * 1e6f;
+            Vector3 p0 = cy.P0;
+            Vector3 p1 = cy.P1;
+            float radius = cy.Radius;
 
-            float distSq = SegmentMath.SegmentSegmentDistanceSq(
-                L0, L1,
-                cy.P0, cy.P1
-            );
+            // Closest point on segment to infinite line
+            Vector3 closest = SegmentMath.ClosestPointOnSegmentToLine(p0, p1, L0, L0 + Ld);
 
-            return distSq <= cy.Radius * cy.Radius;
+            // Distance from line to segment
+            float distSq = (closest - L0).sqrMagnitude;
+
+            return distSq <= radius * radius;
         }
 
         #endregion
 
-
-        // ============================================================
+        // ==============================================================================
         // CYLINDER vs RAY
-        // ============================================================
+        // ==============================================================================
         #region CylinderRay
 
         /// <summary>
-        /// Returns true if a ray intersects a finite cylinder. Outputs approximate t.
+        /// Returns true if the ray intersects the cylinder.
         /// </summary>
         public static bool IntersectsRay(this Cylinder cy, Vector3 R0, Vector3 Rd, out float t)
         {
             t = 0f;
 
-            if (cy.Contains(R0))
-            {
-                t = 0f;
-                return true;
-            }
+            Vector3 p0 = cy.P0;
+            Vector3 p1 = cy.P1;
+            float radius = cy.Radius;
 
-            Vector3 R1 = R0 + Rd * 1e6f;
+            // Closest point on segment to ray
+            Vector3 closest = SegmentMath.ClosestPointOnSegmentToRay(p0, p1, new Ray(R0, Rd));
 
-            float distSq = SegmentMath.SegmentSegmentDistanceSq(
-                R0, R1,
-                cy.P0, cy.P1
-            );
+            Vector3 diff = closest - R0;
 
-            if (distSq > cy.Radius * cy.Radius)
+            float proj = Vector3.Dot(diff, Rd);
+            if (proj < 0f)
                 return false;
 
-            Vector3 mid = (cy.P0 + cy.P1) * 0.5f;
-            Vector3 toMid = mid - R0;
-
-            float tProj = Vector3.Dot(toMid, Rd) / Vector3.Dot(Rd, Rd);
-            if (tProj < 0f)
+            float distSq = diff.sqrMagnitude - proj * proj;
+            if (distSq > radius * radius)
                 return false;
 
-            t = tProj;
-            return true;
+            t = proj - Mathf.Sqrt(radius * radius - distSq);
+            return t >= 0f;
         }
 
         #endregion
 
-
-        // ============================================================
+        // ==============================================================================
         // CYLINDER vs TRIANGLE
-        // ============================================================
+        // ==============================================================================
         #region CylinderTriangle
 
         /// <summary>
-        /// Returns true if a finite cylinder intersects a triangle.
+        /// Returns true if the cylinder intersects the triangle.
         /// </summary>
-        public static bool IntersectsTriangle(this Cylinder cy, Vector3 a, Vector3 b, Vector3 cTri)
+        public static bool IntersectsTriangle(this Cylinder cy, Vector3 a, Vector3 b, Vector3 c)
         {
-            if (cy.Contains(a) || cy.Contains(b) || cy.Contains(cTri))
-                return true;
+            Vector3 p0 = cy.P0;
+            Vector3 p1 = cy.P1;
+            float radius = cy.Radius;
+            float rSq = radius * radius;
 
-            Vector3 axis = cy.P1 - cy.P0;
-            float axisLenSq = Vector3.Dot(axis, axis);
+            // Closest point on triangle to segment
+            Vector3 closest = TriangleMath.ClosestPointOnTriangleToSegment(a, b, c, p0, p1);
 
-            Vector3 triClosest = TriangleMath.ClosestPointOnTriangle(cy.P0, a, b, cTri);
-
-            float t = Vector3.Dot(triClosest - cy.P0, axis) / axisLenSq;
-            t = Mathf.Clamp01(t);
-
-            Vector3 axisPoint = cy.P0 + axis * t;
-
-            float distSq = (triClosest - axisPoint).sqrMagnitude;
-            return distSq <= cy.Radius * cy.Radius;
+            // Check against both endpoints
+            return (closest - p0).sqrMagnitude <= rSq
+                || (closest - p1).sqrMagnitude <= rSq;
         }
 
         #endregion

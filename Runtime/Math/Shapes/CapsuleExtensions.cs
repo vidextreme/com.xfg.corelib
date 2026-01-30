@@ -1,28 +1,29 @@
-// Copyright (c) 2025 Extreme Focus Games
+// Copyright (c) 2025 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
+// ------------------------------------------------------------------------------
+// CapsuleExtensions
+// ------------------------------------------------------------------------------
+// Extension methods for Capsule providing:
+// - Point and shape containment tests
+// - Capsule vs Sphere/Cylinder/Cone containment logic
+// - Deterministic, allocation-free geometric helpers
+//
+// All methods are suitable for Burst jobs and runtime gameplay systems.
+// ------------------------------------------------------------------------------
 
 using UnityEngine;
 
 namespace XFG.Math.Shape
 {
-    // ------------------------------------------------------------------------------
-    // CapsuleExtensions
-    // ------------------------------------------------------------------------------
-    // Utility functions for:
-    // - Containment tests
-    //
-    // All functions are deterministic, allocation-free, and Burst-friendly.
-    // ------------------------------------------------------------------------------
-
     public static class CapsuleExtensions
     {
-        // ============================================================
-        // CONTAINS: POINT
-        // ============================================================
+        // ==============================================================================
+        // CONTAINS POINT
+        // ==============================================================================
         #region ContainsPoint
 
         /// <summary>
-        /// Returns true if the capsule fully contains the given point.
+        /// Returns true if the capsule contains the point.
         /// </summary>
         public static bool Contains(this Capsule c, Vector3 p)
         {
@@ -32,14 +33,13 @@ namespace XFG.Math.Shape
 
         #endregion
 
-
-        // ============================================================
-        // CONTAINS: SPHERE
-        // ============================================================
+        // ==============================================================================
+        // CONTAINS SPHERE
+        // ==============================================================================
         #region ContainsSphere
 
         /// <summary>
-        /// Returns true if the capsule fully contains a sphere.
+        /// Returns true if the capsule fully contains the sphere.
         /// </summary>
         public static bool Contains(this Capsule c, Sphere s)
         {
@@ -55,15 +55,13 @@ namespace XFG.Math.Shape
 
         #endregion
 
-
-        // ============================================================
-        // CONTAINS: CAPSULE
-        // ============================================================
+        // ==============================================================================
+        // CONTAINS CAPSULE
+        // ==============================================================================
         #region ContainsCapsule
 
         /// <summary>
         /// Returns true if this capsule fully contains another capsule.
-        /// Approximate: checks endpoints expanded by radius.
         /// </summary>
         public static bool Contains(this Capsule c, Capsule other)
         {
@@ -82,15 +80,13 @@ namespace XFG.Math.Shape
 
         #endregion
 
-
-        // ============================================================
-        // CONTAINS: CYLINDER
-        // ============================================================
+        // ==============================================================================
+        // CONTAINS CYLINDER
+        // ==============================================================================
         #region ContainsCylinder
 
         /// <summary>
-        /// Returns true if the capsule fully contains a finite cylinder.
-        /// Approximate: checks endpoints expanded by radius.
+        /// Returns true if the capsule fully contains the cylinder.
         /// </summary>
         public static bool Contains(this Capsule c, Cylinder cy)
         {
@@ -109,15 +105,13 @@ namespace XFG.Math.Shape
 
         #endregion
 
-
-        // ============================================================
-        // CONTAINS: CONE
-        // ============================================================
+        // ==============================================================================
+        // CONTAINS CONE
+        // ==============================================================================
         #region ContainsCone
 
         /// <summary>
-        /// Returns true if the capsule fully contains a finite cone.
-        /// Approximate: checks apex and base center expanded by base radius.
+        /// Returns true if the capsule fully contains the cone.
         /// </summary>
         public static bool Contains(this Capsule c, Cone cone)
         {

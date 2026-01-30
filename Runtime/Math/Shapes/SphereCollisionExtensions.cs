@@ -1,28 +1,31 @@
-// Copyright (c) 2025 Extreme Focus Games
+// Copyright (c) 2025 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
+// ------------------------------------------------------------------------------
+// SphereCollisionExtensions
+// ------------------------------------------------------------------------------
+// Collision predicates for Sphere vs:
+// - Sphere
+// - Capsule
+// - Cylinder
+// - Line, Ray
+// - Triangle
+//
+// All methods are deterministic, allocation-free, and suitable for Burst jobs.
+// ------------------------------------------------------------------------------
 
 using UnityEngine;
 
 namespace XFG.Math.Shape
 {
-    // ------------------------------------------------------------------------------
-    // SphereCollisionExtensions
-    // ------------------------------------------------------------------------------
-    // Collision routines for Sphere interactions.
-    // Now uses unified IntersectsOrContains predicates.
-    //
-    // All functions are deterministic, allocation-free, and Burst-friendly.
-    // ------------------------------------------------------------------------------
-
     public static class SphereCollisionExtensions
     {
-        // ============================================================
+        // ==============================================================================
         // SPHERE vs SPHERE
-        // ============================================================
+        // ==============================================================================
         #region SphereSphere
 
         /// <summary>
-        /// Returns true if two spheres intersect.
+        /// Returns true if the spheres intersect or one contains the other.
         /// </summary>
         public static bool Intersects(this Sphere a, Sphere b)
         {
@@ -31,14 +34,13 @@ namespace XFG.Math.Shape
 
         #endregion
 
-
-        // ============================================================
+        // ==============================================================================
         // SPHERE vs CAPSULE
-        // ============================================================
+        // ==============================================================================
         #region SphereCapsule
 
         /// <summary>
-        /// Returns true if a sphere intersects a capsule.
+        /// Returns true if the sphere intersects the capsule.
         /// </summary>
         public static bool Intersects(this Sphere s, Capsule c)
         {
@@ -52,14 +54,13 @@ namespace XFG.Math.Shape
 
         #endregion
 
-
-        // ============================================================
+        // ==============================================================================
         // SPHERE vs CYLINDER
-        // ============================================================
+        // ==============================================================================
         #region SphereCylinder
 
         /// <summary>
-        /// Returns true if a sphere intersects a finite cylinder.
+        /// Returns true if the sphere intersects the cylinder.
         /// </summary>
         public static bool Intersects(this Sphere s, Cylinder cy)
         {
@@ -80,14 +81,13 @@ namespace XFG.Math.Shape
 
         #endregion
 
-
-        // ============================================================
+        // ==============================================================================
         // SPHERE vs LINE
-        // ============================================================
+        // ==============================================================================
         #region SphereLine
 
         /// <summary>
-        /// Returns true if an infinite line intersects a sphere.
+        /// Returns true if the infinite line intersects the sphere.
         /// </summary>
         public static bool Intersects(this Sphere s, Vector3 L0, Vector3 Ld)
         {
@@ -111,14 +111,13 @@ namespace XFG.Math.Shape
 
         #endregion
 
-
-        // ============================================================
+        // ==============================================================================
         // SPHERE vs RAY
-        // ============================================================
+        // ==============================================================================
         #region SphereRay
 
         /// <summary>
-        /// Returns true if a ray intersects a sphere. Outputs hit t.
+        /// Returns true if the ray intersects the sphere. Outputs the hit distance.
         /// </summary>
         public static bool IntersectsRay(this Sphere s, Vector3 R0, Vector3 Rd, out float t)
         {
@@ -151,14 +150,13 @@ namespace XFG.Math.Shape
 
         #endregion
 
-
-        // ============================================================
+        // ==============================================================================
         // SPHERE vs TRIANGLE
-        // ============================================================
+        // ==============================================================================
         #region SphereTriangle
 
         /// <summary>
-        /// Returns true if a sphere intersects a triangle.
+        /// Returns true if the sphere intersects the triangle.
         /// </summary>
         public static bool IntersectsTriangle(this Sphere s, Vector3 a, Vector3 b, Vector3 c)
         {

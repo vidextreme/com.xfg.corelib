@@ -1,19 +1,25 @@
-// Copyright (c) 2025 Extreme Focus Games
+// Copyright (c) 2025 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
+// ------------------------------------------------------------------------------
+// Shapes
+// ------------------------------------------------------------------------------
+// Core geometric primitives used throughout the geometry engine.
+// Includes:
+// - Sphere
+// - Capsule
+// - Cylinder
+// - Cone
+//
+// All structs are deterministic, allocation-free, and suitable for Burst jobs.
+// ------------------------------------------------------------------------------
 
 using UnityEngine;
 
 namespace XFG.Math.Shape
 {
-    // ------------------------------------------------------------------------------
-    // SHAPES
-    // ------------------------------------------------------------------------------
-
-    #region Sphere
-
-    /// <summary>
-    /// Sphere defined by a center point and radius.
-    /// </summary>
+    // ==========================================================================
+    // SPHERE
+    // ==========================================================================
     public struct Sphere
     {
         public Vector3 Center;
@@ -24,16 +30,16 @@ namespace XFG.Math.Shape
             Center = center;
             Radius = radius;
         }
+
+        public bool Contains(Vector3 p)
+        {
+            return (p - Center).sqrMagnitude <= Radius * Radius;
+        }
     }
 
-    #endregion
-
-
-    #region Capsule
-
-    /// <summary>
-    /// Capsule defined by two endpoints and a radius.
-    /// </summary>
+    // ==========================================================================
+    // CAPSULE
+    // ==========================================================================
     public struct Capsule
     {
         public Vector3 P0;
@@ -46,16 +52,20 @@ namespace XFG.Math.Shape
             P1 = p1;
             Radius = radius;
         }
+
+        public Vector3 Axis => P1 - P0;
+        public float Height => (P1 - P0).magnitude;
+
+        public bool Contains(Vector3 p)
+        {
+            Vector3 closest = SegmentMath.ClosestPointOnSegment(P0, P1, p);
+            return (p - closest).sqrMagnitude <= Radius * Radius;
+        }
     }
 
-    #endregion
-
-
-    #region Cylinder
-
-    /// <summary>
-    /// Finite cylinder defined by two endpoints and a radius.
-    /// </summary>
+    // ==========================================================================
+    // CYLINDER
+    // ==========================================================================
     public struct Cylinder
     {
         public Vector3 P0;
@@ -68,44 +78,54 @@ namespace XFG.Math.Shape
             P1 = p1;
             Radius = radius;
         }
+
+        public Vector3 Axis => P1 - P0;
+        public float Height => (P1 - P0).magnitude;
+
+        public bool Contains(Vector3 p)
+        {
+            Vector3 axis = P1 - P0;
+            float axisLenSq = Vector3.Dot(axis, axis);
+
+            float t = Vector3.Dot(p - P0, axis) / axisLenSq;
+            t = Mathf.Clamp01(t);
+
+            Vector3 axisPoint = P0 + axis * t;
+            return (p - axisPoint).sqrMagnitude <= Radius * Radius;
+        }
     }
 
-    #endregion
-
-
-    #region Cone
-
-    /// <summary>
-    /// Finite right circular cone defined by apex, axis, height, and base radius.
-    /// Axis does not need to be normalized.
-    /// </summary>
+    // ==========================================================================
+    // CONE
+    // ==========================================================================
     public struct Cone
     {
         public Vector3 Apex;
-        public Vector3 Axis;
-        public float Height;
+        public Vector3 BaseCenter;
         public float Radius;
+        public float Height;
 
-        public Cone(Vector3 apex, Vector3 axis, float height, float radius)
+        public Cone(Vector3 apex, Vector3 baseCenter, float radius)
         {
             Apex = apex;
-            Axis = axis;
-            Height = height;
+            BaseCenter = baseCenter;
             Radius = radius;
+            Height = (baseCenter - apex).magnitude;
         }
 
-        /// <summary>
-        /// Returns the center of the base circle.
-        /// </summary>
-        public Vector3 BaseCenter
+        public Vector3 Axis => BaseCenter - Apex;
+
+        public bool Contains(Vector3 p)
         {
-            get
-            {
-                Vector3 dir = Axis.normalized;
-                return Apex + dir * Height;
-            }
+            Vector3 dir = Axis.normalized;
+            float t = Vector3.Dot(p - Apex, dir);
+            if (t < 0f || t > Height)
+                return false;
+
+            Vector3 axisPoint = Apex + dir * t;
+            float localRadius = (t / Height) * Radius;
+
+            return (p - axisPoint).sqrMagnitude <= localRadius * localRadius;
         }
     }
-
-    #endregion
 }

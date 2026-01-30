@@ -1,168 +1,72 @@
-// Copyright (c) 2025 Extreme Focus Games
+// Copyright (c) 2025 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
+// ------------------------------------------------------------------------------
+// AABBCollisionExtensions
+// ------------------------------------------------------------------------------
+// Collision tests for axis-aligned bounding boxes (AABB).
+//
+// Provides:
+// - AABB vs AABB
+// - AABB vs Sphere
+// - AABB vs OBB (delegates to OBB SAT)
+// ------------------------------------------------------------------------------
 
 using UnityEngine;
 
 namespace XFG.Math.Shape
 {
-    // ------------------------------------------------------------------------------
-    // ShapeBounds
-    // ------------------------------------------------------------------------------
-    // Computes axis-aligned bounding boxes (AABB) for all XFG.Math.Shape primitives.
-    //
-    // These functions:
-    // - Are deterministic
-    // - Are allocation-free
-    // - Are Burst-friendly
-    // - Do not depend on Unity physics
-    //
-    // AABB is returned as UnityEngine.Bounds for convenience.
-    // ------------------------------------------------------------------------------
-
-    public static class ShapeBounds
+    public static class AABBCollisionExtensions
     {
-        // ============================================================
-        // SPHERE
-        // ============================================================
-        #region Sphere
-
-        /// <summary>
-        /// Computes the AABB of a sphere.
-        /// </summary>
-        public static Bounds GetAABB(this Sphere s)
+        // ==========================================================================
+        // AABB vs AABB
+        // ==========================================================================
+        public static bool Intersects(Bounds a, Bounds b)
         {
-            Vector3 extents = new Vector3(s.Radius, s.Radius, s.Radius);
-            return new Bounds(s.Center, extents * 2f);
+            Vector3 aMin = a.min;
+            Vector3 aMax = a.max;
+            Vector3 bMin = b.min;
+            Vector3 bMax = b.max;
+
+            if (aMax.x < bMin.x || aMin.x > bMax.x) return false;
+            if (aMax.y < bMin.y || aMin.y > bMax.y) return false;
+            if (aMax.z < bMin.z || aMin.z > bMax.z) return false;
+
+            return true;
         }
 
-        #endregion
-
-
-        // ============================================================
-        // CAPSULE
-        // ============================================================
-        #region Capsule
-
-        /// <summary>
-        /// Computes the AABB of a capsule.
-        /// </summary>
-        public static Bounds GetAABB(this Capsule c)
+        // ==========================================================================
+        // AABB vs SPHERE
+        // ==========================================================================
+        public static bool Intersects(Bounds a, Vector3 sphereCenter, float sphereRadius)
         {
-            Vector3 min = Vector3.Min(c.P0, c.P1);
-            Vector3 max = Vector3.Max(c.P0, c.P1);
+            Vector3 c = a.center;
+            Vector3 e = a.extents;
 
-            Vector3 r = new Vector3(c.Radius, c.Radius, c.Radius);
+            Vector3 d = sphereCenter - c;
 
-            min -= r;
-            max += r;
+            float x = Mathf.Clamp(d.x, -e.x, e.x);
+            float y = Mathf.Clamp(d.y, -e.y, e.y);
+            float z = Mathf.Clamp(d.z, -e.z, e.z);
 
-            Bounds b = new Bounds();
-            b.SetMinMax(min, max);
-            return b;
+            Vector3 closest = c + new Vector3(x, y, z);
+
+            return (closest - sphereCenter).sqrMagnitude <= sphereRadius * sphereRadius;
         }
 
-        #endregion
-
-
-        // ============================================================
-        // CYLINDER
-        // ============================================================
-        #region Cylinder
-
-        /// <summary>
-        /// Computes the AABB of a finite cylinder.
-        /// </summary>
-        public static Bounds GetAABB(this Cylinder cy)
+        // ==========================================================================
+        // AABB vs OBB
+        // ==========================================================================
+        public static bool Intersects(Bounds a, OBB b)
         {
-            Vector3 min = Vector3.Min(cy.P0, cy.P1);
-            Vector3 max = Vector3.Max(cy.P0, cy.P1);
+            OBB aa = new OBB(
+                a.center,
+                a.extents,
+                Vector3.right,
+                Vector3.up,
+                Vector3.forward
+            );
 
-            Vector3 r = new Vector3(cy.Radius, cy.Radius, cy.Radius);
-
-            min -= r;
-            max += r;
-
-            Bounds b = new Bounds();
-            b.SetMinMax(min, max);
-            return b;
+            return OBBCollisionExtensions.Intersects(aa, b);
         }
-
-        #endregion
-
-
-        // ============================================================
-        // TRIANGLE
-        // ============================================================
-        #region Triangle
-
-        /// <summary>
-        /// Computes the AABB of a triangle.
-        /// </summary>
-        public static Bounds GetAABB(Vector3 a, Vector3 b, Vector3 c)
-        {
-            Vector3 min = Vector3.Min(a, Vector3.Min(b, c));
-            Vector3 max = Vector3.Max(a, Vector3.Max(b, c));
-
-            Bounds bnd = new Bounds();
-            bnd.SetMinMax(min, max);
-            return bnd;
-        }
-
-        #endregion
-
-
-        // ============================================================
-        // LINE (infinite)
-        // ============================================================
-        #region Line
-
-        /// <summary>
-        /// Infinite lines do not have finite AABBs.
-        /// This returns an empty Bounds centered at L0.
-        /// </summary>
-        public static Bounds GetAABB_Line(Vector3 L0)
-        {
-            return new Bounds(L0, Vector3.zero);
-        }
-
-        #endregion
-
-
-        // ============================================================
-        // RAY
-        // ============================================================
-        #region Ray
-
-        /// <summary>
-        /// Rays do not have finite AABBs.
-        /// This returns an empty Bounds centered at R0.
-        /// </summary>
-        public static Bounds GetAABB_Ray(Vector3 R0)
-        {
-            return new Bounds(R0, Vector3.zero);
-        }
-
-        #endregion
-
-
-        // ============================================================
-        // SEGMENT
-        // ============================================================
-        #region Segment
-
-        /// <summary>
-        /// Computes the AABB of a finite segment.
-        /// </summary>
-        public static Bounds GetAABB_Segment(Vector3 p0, Vector3 p1)
-        {
-            Vector3 min = Vector3.Min(p0, p1);
-            Vector3 max = Vector3.Max(p0, p1);
-
-            Bounds b = new Bounds();
-            b.SetMinMax(min, max);
-            return b;
-        }
-
-        #endregion
     }
 }
