@@ -11,6 +11,8 @@
 // - Line, Ray, Segment
 // - Plane
 // - AABB (Unity Bounds)
+// - OBB
+// - Triangle
 // - Frustum (array of Unity Planes)
 //
 // All methods are deterministic, allocation-free, and suitable for Burst jobs.
@@ -18,21 +20,37 @@
 // ------------------------------------------------------------------------------
 
 using UnityEngine;
-using XFG.Math;
 
 namespace XFG.Math.Shape
 {
     public static class TrianglePrimitiveCollision
     {
-        // ==========================================================================
+        // ==============================================================================
         // INTERNAL HELPERS
-        // ==========================================================================
+        // ==============================================================================
+        #region InternalHelpers
 
+        /// <summary>
+        /// Returns the unnormalized triangle normal.
+        /// </summary>
+        /// <param name="a">Triangle vertex A.</param>
+        /// <param name="b">Triangle vertex B.</param>
+        /// <param name="c">Triangle vertex C.</param>
+        /// <returns>Unnormalized normal vector.</returns>
         private static Vector3 TriangleNormal(Vector3 a, Vector3 b, Vector3 c)
         {
             return Vector3.Cross(b - a, c - a);
         }
 
+        /// <summary>
+        /// Projects triangle vertices onto an axis.
+        /// </summary>
+        /// <param name="a">Triangle vertex A.</param>
+        /// <param name="b">Triangle vertex B.</param>
+        /// <param name="c">Triangle vertex C.</param>
+        /// <param name="axis">Axis to project onto.</param>
+        /// <param name="min">Minimum projection value.</param>
+        /// <param name="max">Maximum projection value.</param>
         private static void ProjectTriangleOnAxis(
             Vector3 a, Vector3 b, Vector3 c,
             Vector3 axis,
@@ -52,18 +70,34 @@ namespace XFG.Math.Shape
             if (dc > max) max = dc;
         }
 
+        /// <summary>
+        /// Returns true if 1D intervals overlap.
+        /// </summary>
+        /// <param name="minA">Minimum of interval A.</param>
+        /// <param name="maxA">Maximum of interval A.</param>
+        /// <param name="minB">Minimum of interval B.</param>
+        /// <param name="maxB">Maximum of interval B.</param>
+        /// <returns>True if intervals overlap.</returns>
         private static bool Overlaps1D(float minA, float maxA, float minB, float maxB)
         {
             return !(maxA < minB || maxB < minA);
         }
 
-        // ==========================================================================
+        #endregion
+
+        // ==============================================================================
         // TRIANGLE vs SPHERE
-        // ==========================================================================
+        // ==============================================================================
+        #region TriangleVsSphere
 
         /// <summary>
         /// Returns true if the triangle intersects the sphere.
         /// </summary>
+        /// <param name="a">Triangle vertex A.</param>
+        /// <param name="b">Triangle vertex B.</param>
+        /// <param name="c">Triangle vertex C.</param>
+        /// <param name="s">Sphere to test.</param>
+        /// <returns>True if the triangle intersects the sphere.</returns>
         public static bool IntersectsTriangleSphere(
             Vector3 a, Vector3 b, Vector3 c,
             Sphere s)
@@ -76,13 +110,21 @@ namespace XFG.Math.Shape
             return (closest - center).sqrMagnitude <= rSq;
         }
 
-        // ==========================================================================
+        #endregion
+
+        // ==============================================================================
         // TRIANGLE vs CAPSULE
-        // ==========================================================================
+        // ==============================================================================
+        #region TriangleVsCapsule
 
         /// <summary>
         /// Returns true if the triangle intersects the capsule.
         /// </summary>
+        /// <param name="a">Triangle vertex A.</param>
+        /// <param name="b">Triangle vertex B.</param>
+        /// <param name="c">Triangle vertex C.</param>
+        /// <param name="cap">Capsule to test.</param>
+        /// <returns>True if the triangle intersects the capsule.</returns>
         public static bool IntersectsTriangleCapsule(
             Vector3 a, Vector3 b, Vector3 c,
             Capsule cap)
@@ -98,13 +140,21 @@ namespace XFG.Math.Shape
             return (closest - segClosest).sqrMagnitude <= rSq;
         }
 
-        // ==========================================================================
+        #endregion
+
+        // ==============================================================================
         // TRIANGLE vs CYLINDER
-        // ==========================================================================
+        // ==============================================================================
+        #region TriangleVsCylinder
 
         /// <summary>
         /// Returns true if the triangle intersects the cylinder.
         /// </summary>
+        /// <param name="a">Triangle vertex A.</param>
+        /// <param name="b">Triangle vertex B.</param>
+        /// <param name="c">Triangle vertex C.</param>
+        /// <param name="cy">Cylinder to test.</param>
+        /// <returns>True if the triangle intersects the cylinder.</returns>
         public static bool IntersectsTriangleCylinder(
             Vector3 a, Vector3 b, Vector3 c,
             Cylinder cy)
@@ -120,23 +170,30 @@ namespace XFG.Math.Shape
             return (closest - axisClosest).sqrMagnitude <= rSq;
         }
 
-        // ==========================================================================
+        #endregion
+
+        // ==============================================================================
         // TRIANGLE vs CONE
-        // ==========================================================================
+        // ==============================================================================
+        #region TriangleVsCone
 
         /// <summary>
         /// Returns true if the triangle intersects the cone.
         /// </summary>
+        /// <param name="a">Triangle vertex A.</param>
+        /// <param name="b">Triangle vertex B.</param>
+        /// <param name="c">Triangle vertex C.</param>
+        /// <param name="cone">Cone to test.</param>
+        /// <returns>True if the triangle intersects the cone.</returns>
         public static bool IntersectsTriangleCone(
             Vector3 a, Vector3 b, Vector3 c,
             Cone cone)
         {
             Vector3 apex = cone.Apex;
-            Vector3 axis = cone.Axis;   // assumed normalized
+            Vector3 axis = cone.Axis;
             float height = cone.Height;
             float radius = cone.Radius;
 
-            // Closest point on triangle to apex
             Vector3 closest = TriangleMath.ClosestPointOnTriangle(apex, a, b, c);
 
             Vector3 v = closest - apex;
@@ -152,13 +209,23 @@ namespace XFG.Math.Shape
             return radial.sqrMagnitude <= rAtH * rAtH;
         }
 
-        // ==========================================================================
+        #endregion
+
+        // ==============================================================================
         // TRIANGLE vs RAY / LINE / SEGMENT
-        // ==========================================================================
+        // ==============================================================================
+        #region TriangleVsRayLineSegment
 
         /// <summary>
         /// Raycast against triangle using Möller–Trumbore. Returns true if hit.
         /// </summary>
+        /// <param name="ray">Ray to test.</param>
+        /// <param name="a">Triangle vertex A.</param>
+        /// <param name="b">Triangle vertex B.</param>
+        /// <param name="c">Triangle vertex C.</param>
+        /// <param name="t">Ray parameter at intersection.</param>
+        /// <param name="barycentric">Barycentric coordinates at intersection.</param>
+        /// <returns>True if the ray intersects the triangle.</returns>
         public static bool RaycastTriangle(
             Ray ray,
             Vector3 a, Vector3 b, Vector3 c,
@@ -181,7 +248,7 @@ namespace XFG.Math.Shape
             if (det > -EPS && det < EPS)
                 return false;
 
-            float invDet = 1.0f / det;
+            float invDet = 1f / det;
 
             Vector3 s = o - a;
             float u = Vector3.Dot(s, p) * invDet;
@@ -205,6 +272,13 @@ namespace XFG.Math.Shape
         /// <summary>
         /// Returns true if the ray intersects the triangle.
         /// </summary>
+        /// <param name="R0">Ray origin.</param>
+        /// <param name="Rd">Ray direction.</param>
+        /// <param name="a">Triangle vertex A.</param>
+        /// <param name="b">Triangle vertex B.</param>
+        /// <param name="c">Triangle vertex C.</param>
+        /// <param name="t">Ray parameter at intersection.</param>
+        /// <returns>True if the ray intersects the triangle.</returns>
         public static bool IntersectsTriangleRay(
             Vector3 R0, Vector3 Rd,
             Vector3 a, Vector3 b, Vector3 c,
@@ -216,6 +290,13 @@ namespace XFG.Math.Shape
         /// <summary>
         /// Returns true if the segment intersects the triangle.
         /// </summary>
+        /// <param name="p0">Segment start point.</param>
+        /// <param name="p1">Segment end point.</param>
+        /// <param name="a">Triangle vertex A.</param>
+        /// <param name="b">Triangle vertex B.</param>
+        /// <param name="c">Triangle vertex C.</param>
+        /// <param name="t">Segment parameter at intersection.</param>
+        /// <returns>True if the segment intersects the triangle.</returns>
         public static bool IntersectsTriangleSegment(
             Vector3 p0, Vector3 p1,
             Vector3 a, Vector3 b, Vector3 c,
@@ -251,27 +332,40 @@ namespace XFG.Math.Shape
         /// <summary>
         /// Returns true if the infinite line intersects the triangle.
         /// </summary>
+        /// <param name="L0">A point on the line.</param>
+        /// <param name="Ld">Line direction.</param>
+        /// <param name="a">Triangle vertex A.</param>
+        /// <param name="b">Triangle vertex B.</param>
+        /// <param name="c">Triangle vertex C.</param>
+        /// <returns>True if the line intersects the triangle.</returns>
         public static bool IntersectsTriangleLine(
             Vector3 L0, Vector3 Ld,
             Vector3 a, Vector3 b, Vector3 c)
         {
-            // Treat as ray in both directions and ignore t sign.
             Ray ray = new Ray(L0, Ld);
-            bool hit = RaycastTriangle(ray, a, b, c, out _, out _);
-            if (hit) return true;
+            if (RaycastTriangle(ray, a, b, c, out _, out _))
+                return true;
 
             ray = new Ray(L0, -Ld);
             return RaycastTriangle(ray, a, b, c, out _, out _);
         }
 
-        // ==========================================================================
+        #endregion
+
+        // ==============================================================================
         // TRIANGLE vs PLANE
-        // ==========================================================================
+        // ==============================================================================
+        #region TriangleVsPlane
 
         /// <summary>
         /// Classifies triangle relative to plane:
         /// -1 = fully behind, 0 = spanning, +1 = fully in front.
         /// </summary>
+        /// <param name="a">Triangle vertex A.</param>
+        /// <param name="b">Triangle vertex B.</param>
+        /// <param name="c">Triangle vertex C.</param>
+        /// <param name="plane">Plane to test.</param>
+        /// <returns>Classification result.</returns>
         public static int ClassifyTrianglePlane(
             Vector3 a, Vector3 b, Vector3 c,
             Plane plane)
@@ -292,6 +386,11 @@ namespace XFG.Math.Shape
         /// <summary>
         /// Returns true if the triangle intersects the plane (i.e., spans it).
         /// </summary>
+        /// <param name="a">Triangle vertex A.</param>
+        /// <param name="b">Triangle vertex B.</param>
+        /// <param name="c">Triangle vertex C.</param>
+        /// <param name="plane">Plane to test.</param>
+        /// <returns>True if the triangle intersects the plane.</returns>
         public static bool IntersectsTrianglePlane(
             Vector3 a, Vector3 b, Vector3 c,
             Plane plane)
@@ -299,49 +398,44 @@ namespace XFG.Math.Shape
             return ClassifyTrianglePlane(a, b, c, plane) == 0;
         }
 
-        // ==========================================================================
-        // TRIANGLE vs AABB (Unity Bounds)
-        // ==========================================================================
+        #endregion
+
+        // ==============================================================================
+        // TRIANGLE vs AABB
+        // ==============================================================================
+        #region TriangleVsAabb
 
         /// <summary>
         /// Returns true if the triangle intersects the AABB (Unity Bounds).
         /// SAT-based, conservative and robust for gameplay.
         /// </summary>
+        /// <param name="a">Triangle vertex A.</param>
+        /// <param name="b">Triangle vertex B.</param>
+        /// <param name="c">Triangle vertex C.</param>
+        /// <param name="bounds">AABB to test.</param>
+        /// <returns>True if the triangle intersects the AABB.</returns>
         public static bool IntersectsTriangleAabb(
             Vector3 a, Vector3 b, Vector3 c,
             Bounds bounds)
         {
-            // Quick reject: triangle vs AABB bounds check
-            if (!bounds.Contains(a) && !bounds.Contains(b) && !bounds.Contains(c))
-            {
-                // Check if triangle's AABB overlaps bounds
-                Vector3 triMin = Vector3.Min(a, Vector3.Min(b, c));
-                Vector3 triMax = Vector3.Max(a, Vector3.Max(b, c));
+            Vector3 triMin = Vector3.Min(a, Vector3.Min(b, c));
+            Vector3 triMax = Vector3.Max(a, Vector3.Max(b, c));
 
-                if (triMax.x < bounds.min.x || triMin.x > bounds.max.x) return false;
-                if (triMax.y < bounds.min.y || triMin.y > bounds.max.y) return false;
-                if (triMax.z < bounds.min.z || triMin.z > bounds.max.z) return false;
-            }
-
-            // SAT axes:
-            // 1) AABB axes: (1,0,0), (0,1,0), (0,0,1)
-            // 2) Triangle normal
-            // 3) 9 cross-product axes: edges x AABB axes
+            if (triMax.x < bounds.min.x || triMin.x > bounds.max.x) return false;
+            if (triMax.y < bounds.min.y || triMin.y > bounds.max.y) return false;
+            if (triMax.z < bounds.min.z || triMin.z > bounds.max.z) return false;
 
             Vector3 center = bounds.center;
             Vector3 extents = bounds.extents;
 
-            // Move triangle into AABB local space
             Vector3 aL = a - center;
             Vector3 bL = b - center;
             Vector3 cL = c - center;
 
-            // AABB axes
             Vector3 axisX = Vector3.right;
             Vector3 axisY = Vector3.up;
             Vector3 axisZ = Vector3.forward;
 
-            // 1) Test AABB axes
             float min, max;
 
             ProjectTriangleOnAxis(aL, bL, cL, axisX, out min, out max);
@@ -353,14 +447,12 @@ namespace XFG.Math.Shape
             ProjectTriangleOnAxis(aL, bL, cL, axisZ, out min, out max);
             if (max < -extents.z || min > extents.z) return false;
 
-            // 2) Triangle normal
             Vector3 n = TriangleNormal(aL, bL, cL);
             if (n.sqrMagnitude > 1e-12f)
             {
                 n.Normalize();
                 ProjectTriangleOnAxis(aL, bL, cL, n, out min, out max);
 
-                // Project AABB onto n: center at 0, radius = sum(|n_i| * extents_i)
                 float r = Mathf.Abs(n.x) * extents.x
                         + Mathf.Abs(n.y) * extents.y
                         + Mathf.Abs(n.z) * extents.z;
@@ -368,59 +460,226 @@ namespace XFG.Math.Shape
                 if (max < -r || min > r) return false;
             }
 
-            // 3) Edge cross axes
             Vector3 e0 = bL - aL;
             Vector3 e1 = cL - bL;
             Vector3 e2 = aL - cL;
 
-            TestEdgeAxis(e0, axisX, aL, bL, cL, extents, ref min, ref max);
-            TestEdgeAxis(e0, axisY, aL, bL, cL, extents, ref min, ref max);
-            TestEdgeAxis(e0, axisZ, aL, bL, cL, extents, ref min, ref max);
-
-            TestEdgeAxis(e1, axisX, aL, bL, cL, extents, ref min, ref max);
-            TestEdgeAxis(e1, axisY, aL, bL, cL, extents, ref min, ref max);
-            TestEdgeAxis(e1, axisZ, aL, bL, cL, extents, ref min, ref max);
-
-            TestEdgeAxis(e2, axisX, aL, bL, cL, extents, ref min, ref max);
-            TestEdgeAxis(e2, axisY, aL, bL, cL, extents, ref min, ref max);
-            TestEdgeAxis(e2, axisZ, aL, bL, cL, extents, ref min, ref max);
+            if (!TestEdgeAxesAabb(e0, aL, bL, cL, extents)) return false;
+            if (!TestEdgeAxesAabb(e1, aL, bL, cL, extents)) return false;
+            if (!TestEdgeAxesAabb(e2, aL, bL, cL, extents)) return false;
 
             return true;
         }
 
-        private static void TestEdgeAxis(
+        /// <summary>
+        /// Tests all cross-product axes between an edge and the AABB axes.
+        /// </summary>
+        /// <param name="edge">Triangle edge in AABB local space.</param>
+        /// <param name="a">Triangle vertex A in AABB local space.</param>
+        /// <param name="b">Triangle vertex B in AABB local space.</param>
+        /// <param name="c">Triangle vertex C in AABB local space.</param>
+        /// <param name="extents">AABB extents.</param>
+        /// <returns>True if all axes overlap.</returns>
+        private static bool TestEdgeAxesAabb(
+            Vector3 edge,
+            Vector3 a, Vector3 b, Vector3 c,
+            Vector3 extents)
+        {
+            Vector3 axisX = Vector3.right;
+            Vector3 axisY = Vector3.up;
+            Vector3 axisZ = Vector3.forward;
+
+            if (!TestSingleEdgeAxis(edge, axisX, a, b, c, extents)) return false;
+            if (!TestSingleEdgeAxis(edge, axisY, a, b, c, extents)) return false;
+            if (!TestSingleEdgeAxis(edge, axisZ, a, b, c, extents)) return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Tests a single cross-product axis between an edge and an AABB axis.
+        /// </summary>
+        /// <param name="edge">Triangle edge in AABB local space.</param>
+        /// <param name="axisBase">AABB axis.</param>
+        /// <param name="a">Triangle vertex A in AABB local space.</param>
+        /// <param name="b">Triangle vertex B in AABB local space.</param>
+        /// <param name="c">Triangle vertex C in AABB local space.</param>
+        /// <param name="extents">AABB extents.</param>
+        /// <returns>True if projections overlap.</returns>
+        private static bool TestSingleEdgeAxis(
             Vector3 edge, Vector3 axisBase,
             Vector3 a, Vector3 b, Vector3 c,
-            Vector3 extents,
-            ref float min, ref float max)
+            Vector3 extents)
         {
             Vector3 axis = Vector3.Cross(edge, axisBase);
             if (axis.sqrMagnitude < 1e-12f)
-                return;
+                return true;
 
             axis.Normalize();
 
-            ProjectTriangleOnAxis(a, b, c, axis, out min, out max);
+            ProjectTriangleOnAxis(a, b, c, axis, out float min, out float max);
 
             float r = Mathf.Abs(axis.x) * extents.x
                     + Mathf.Abs(axis.y) * extents.y
                     + Mathf.Abs(axis.z) * extents.z;
 
-            if (max < -r || min > r)
-            {
-                // Early out via exception-like pattern is not Burst-friendly,
-                // so this helper only performs the test; caller handles result.
-                // Here we just rely on caller to interpret min/max.
-            }
+            return !(max < -r || min > r);
         }
 
-        // ==========================================================================
-        // TRIANGLE vs FRUSTUM (array of Planes)
-        // ==========================================================================
+        #endregion
+
+        // ==============================================================================
+        // TRIANGLE vs OBB
+        // ==============================================================================
+        #region TriangleVsObb
+
+        /// <summary>
+        /// Returns true if the triangle intersects the oriented bounding box.
+        /// Uses the separating axis theorem.
+        /// </summary>
+        /// <param name="center">OBB center.</param>
+        /// <param name="extents">OBB extents.</param>
+        /// <param name="right">OBB local X axis.</param>
+        /// <param name="up">OBB local Y axis.</param>
+        /// <param name="forward">OBB local Z axis.</param>
+        /// <param name="a">Triangle vertex A.</param>
+        /// <param name="b">Triangle vertex B.</param>
+        /// <param name="c">Triangle vertex C.</param>
+        /// <returns>True if the triangle intersects the OBB.</returns>
+        public static bool IntersectsTriangleObb(
+            Vector3 center, Vector3 extents,
+            Vector3 right, Vector3 up, Vector3 forward,
+            Vector3 a, Vector3 b, Vector3 c)
+        {
+            Matrix4x4 worldToObb = Matrix4x4.identity;
+            worldToObb.m00 = right.x; worldToObb.m01 = right.y; worldToObb.m02 = right.z;
+            worldToObb.m10 = up.x; worldToObb.m11 = up.y; worldToObb.m12 = up.z;
+            worldToObb.m20 = forward.x; worldToObb.m21 = forward.y; worldToObb.m22 = forward.z;
+            worldToObb.m03 = -Vector3.Dot(right, center);
+            worldToObb.m13 = -Vector3.Dot(up, center);
+            worldToObb.m23 = -Vector3.Dot(forward, center);
+
+            Vector3 aL = worldToObb.MultiplyPoint3x4(a);
+            Vector3 bL = worldToObb.MultiplyPoint3x4(b);
+            Vector3 cL = worldToObb.MultiplyPoint3x4(c);
+
+            Bounds localBounds = new Bounds(Vector3.zero, extents * 2f);
+            return IntersectsTriangleAabb(aL, bL, cL, localBounds);
+        }
+
+        #endregion
+
+        // ==============================================================================
+        // TRIANGLE vs TRIANGLE
+        // ==============================================================================
+        #region TriangleVsTriangle
+
+        /// <summary>
+        /// Returns true if the two triangles intersect using the separating axis theorem.
+        /// </summary>
+        /// <param name="a0">Triangle 1 vertex A.</param>
+        /// <param name="b0">Triangle 1 vertex B.</param>
+        /// <param name="c0">Triangle 1 vertex C.</param>
+        /// <param name="a1">Triangle 2 vertex A.</param>
+        /// <param name="b1">Triangle 2 vertex B.</param>
+        /// <param name="c1">Triangle 2 vertex C.</param>
+        /// <returns>True if the triangles intersect.</returns>
+        public static bool IntersectsTriangleTriangle(
+            Vector3 a0, Vector3 b0, Vector3 c0,
+            Vector3 a1, Vector3 b1, Vector3 c1)
+        {
+            Vector3 n0 = TriangleNormal(a0, b0, c0);
+            if (n0.sqrMagnitude > 1e-12f)
+            {
+                if (!AxisOverlapTriangles(n0, a0, b0, c0, a1, b1, c1))
+                    return false;
+            }
+
+            Vector3 n1 = TriangleNormal(a1, b1, c1);
+            if (n1.sqrMagnitude > 1e-12f)
+            {
+                if (!AxisOverlapTriangles(n1, a0, b0, c0, a1, b1, c1))
+                    return false;
+            }
+
+            Vector3[] e0 =
+            {
+                b0 - a0,
+                c0 - b0,
+                a0 - c0
+            };
+
+            Vector3[] e1 =
+            {
+                b1 - a1,
+                c1 - b1,
+                a1 - c1
+            };
+
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    Vector3 axis = Vector3.Cross(e0[i], e1[j]);
+                    if (axis.sqrMagnitude < 1e-12f)
+                        continue;
+
+                    if (!AxisOverlapTriangles(axis, a0, b0, c0, a1, b1, c1))
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Returns true if projections of both triangles overlap on the axis.
+        /// </summary>
+        /// <param name="axis">Axis to test.</param>
+        /// <param name="a0">Triangle 1 vertex A.</param>
+        /// <param name="b0">Triangle 1 vertex B.</param>
+        /// <param name="c0">Triangle 1 vertex C.</param>
+        /// <param name="a1">Triangle 2 vertex A.</param>
+        /// <param name="b1">Triangle 2 vertex B.</param>
+        /// <param name="c1">Triangle 2 vertex C.</param>
+        /// <returns>True if projections overlap.</returns>
+        private static bool AxisOverlapTriangles(
+            Vector3 axis,
+            Vector3 a0, Vector3 b0, Vector3 c0,
+            Vector3 a1, Vector3 b1, Vector3 c1)
+        {
+            float p0 = Vector3.Dot(a0, axis);
+            float p1 = Vector3.Dot(b0, axis);
+            float p2 = Vector3.Dot(c0, axis);
+
+            float q0 = Vector3.Dot(a1, axis);
+            float q1 = Vector3.Dot(b1, axis);
+            float q2 = Vector3.Dot(c1, axis);
+
+            float min0 = Mathf.Min(p0, Mathf.Min(p1, p2));
+            float max0 = Mathf.Max(p0, Mathf.Max(p1, p2));
+
+            float min1 = Mathf.Min(q0, Mathf.Min(q1, q2));
+            float max1 = Mathf.Max(q0, Mathf.Max(q1, q2));
+
+            return !(max0 < min1 || max1 < min0);
+        }
+
+        #endregion
+
+        // ==============================================================================
+        // TRIANGLE vs FRUSTUM
+        // ==============================================================================
+        #region TriangleVsFrustum
 
         /// <summary>
         /// Returns true if the triangle intersects or is inside the frustum defined by planes.
         /// </summary>
+        /// <param name="a">Triangle vertex A.</param>
+        /// <param name="b">Triangle vertex B.</param>
+        /// <param name="c">Triangle vertex C.</param>
+        /// <param name="planes">Array of frustum planes.</param>
+        /// <returns>True if the triangle intersects or is inside the frustum.</returns>
         public static bool IntersectsTriangleFrustum(
             Vector3 a, Vector3 b, Vector3 c,
             Plane[] planes)
@@ -443,5 +702,7 @@ namespace XFG.Math.Shape
 
             return true;
         }
+
+        #endregion
     }
 }
