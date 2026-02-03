@@ -1,4 +1,4 @@
-// Copyright (c) 2025 John David Uy
+// Copyright (c) 2026 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
 
 using UnityEngine;
