@@ -1,3 +1,6 @@
+// Copyright (c) 2025 John David Uy
+// Licensed under the MIT License. See LICENSE for details.
+
 using System;
 using System.Runtime.CompilerServices;
 

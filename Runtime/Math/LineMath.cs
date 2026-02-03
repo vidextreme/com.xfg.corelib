@@ -1,3 +1,6 @@
+// Copyright (c) 2025 John David Uy
+// Licensed under the MIT License. See LICENSE for details.
+
 using UnityEngine;
 
 namespace XFG.Math
@@ -8,7 +11,6 @@ namespace XFG.Math
     // Pure geometric utilities for infinite line operations.
     // No shape-specific logic lives here.
     // ------------------------------------------------------------------------------
-
     public static class LineMath
     {
         // ============================================================

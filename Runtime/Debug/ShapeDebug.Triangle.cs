@@ -1,9 +1,12 @@
+// Copyright (c) 2025 John David Uy
+// Licensed under the MIT License. See LICENSE for details.
+
 // ------------------------------------------------------------------------------
 // ShapeDebug.Triangle
 // ------------------------------------------------------------------------------
 // Editor-only visualization helpers for triangle math.
 // ------------------------------------------------------------------------------
-
+//
 using UnityEngine;
 
 namespace XFG.Math.Shape

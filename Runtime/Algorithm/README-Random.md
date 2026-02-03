@@ -1,4 +1,4 @@
-# PRNG — XFG Simple Game Core Library
+# Pseudorandom Number Generator (PRNG) — XFG Simple Game Core Library
 
 This document summarizes the pseudorandom number utilities in `Runtime/Algorithm/` and shows usage examples and a compact comparison.
 
