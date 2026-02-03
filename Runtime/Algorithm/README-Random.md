@@ -1,56 +1,53 @@
 # PRNG — XFG Simple Game Core Library
 
-This document summarizes the pseudorandom number generator utilities included in `Runtime/Algorithm/` and shows a few usage examples.
+This document summarizes the pseudorandom number utilities in `Runtime/Algorithm/` and shows usage examples and a compact comparison.
 
-Files
-- `PRNG_Common.cs` — common helpers and the `IRandom` interface. Also exposes a global `Core.Random` instance.
-- `PRNG_XorShift128Plus.cs` — implementation of `XorShift128Plus : IRandom` (fast, deterministic, non-cryptographic PRNG).
-- `WeightedChance.cs` — helpers for selecting items by weighted probability using an `IRandom`.
+Implemented primitives
 
-Overview
+- `SplitMix64` — high-quality 64-bit scramble function used to expand seeds. Typically used to initialize PRNG state; it can also be used as a simple generator for short sequences.
+- `XorShift128Plus` — 128-bit xorshift+ generator implemented as `XorShift128Plus` (implements `IRandom`). Fast, deterministic, and suitable for gameplay and simulation where cryptographic strength is not required.
 
-IRandom
-- A small, consistent RNG interface used across the library:
-  - `uint NextUInt()`
-  - `float NextFloat01()` — returns a value in `[0,1)`
-  - `float NextFloat(float min, float max)` — returns a value in `[min,max)`
-  - `int NextInt(int maxExclusive)` — returns in `[0, maxExclusive)`
-  - `int NextInt(int minInclusive, int maxExclusive)` — bounded integer
+Design goals
 
-Core.Random
-- `Core` exposes a global `IRandom Random = new XorShift128Plus(9001UL)` in `PRNG_Common.cs`.
-- Use `Core.Random` when you want a single shared deterministic RNG across systems.
+- Deterministic outputs for a given seed (reproducible simulations and tests)
+- Low allocation and high throughput for runtime use
+- Simple API surface via `IRandom` for interoperability between different generator implementations
+- Non-cryptographic; not suitable for security-sensitive uses
+
+Algorithm details
+
+SplitMix64
+- Purpose: seed expansion / scrambling
+- Behavior: given a 64-bit state `x`, `SplitMix64(ref x)` mutates `x` and returns a well-scrambled 64-bit value. It mixes bits thoroughly and is fast.
+- Use: initialize the internal state of larger PRNGs (e.g., XorShift128Plus) to avoid correlated starting states.
 
 XorShift128Plus
-- Fast, deterministic 128-bit xorshift+ generator.
-- Construct with a 64-bit seed (non-zero recommended). The seed is expanded via `SplitMix64` to initialize internal state.
-- API includes `NextULong()`, plus the `IRandom` methods.
-- Not suitable for cryptographic use.
+- Type: xorshift+ family (128-bit state)
+- State: two 64-bit unsigned integers (`_s0`, `_s1`)
+- Period: 2^128 - 1 (practical period for well-behaved seeds)
+- Output: 64-bit (primary) and the `IRandom` methods expose 32-bit, floats in [0,1), and integer ranges
+- Seeding: constructed from a 64-bit seed that is expanded via `SplitMix64` to populate the two 64-bit state values
+- Performance: very fast, minimal branches and integer operations; suitable for tight loops and game logic
+- Quality: good statistical properties for gameplay and simulations; not cryptographically secure
 
-Weighted chance
-- `Core.RollWeightedChance<T>(ReadOnlySpan<T> items, IRandom rng)` selects an item from a span using each item's `Weight` property.
-- There's also an overload that uses `Core.Random`.
+Usage examples
 
-Examples (C#)
-
-- Using the global RNG
+- Use the shared/global RNG (if present in your build)
 ```csharp
 using XFG.Algorithm;
 
-// draw a few values from the global RNG
+// Example: draw a few values from the global RNG
 float p = Core.Random.NextFloat01();
 int idx = Core.Random.NextInt(10);
 float scaled = Core.Random.NextFloat(-5f, 5f);
 uint raw = Core.Random.NextUInt();
 ```
 
-- Creating your own deterministic RNG
+- Create an independent deterministic RNG for tests or deterministic simulations
 ```csharp
 using XFG.Algorithm;
 
-// Create an independent PRNG with a fixed seed for reproducible tests
 var rng = new XorShift128Plus(123456789UL);
-
 for (int i = 0; i < 5; i++)
 {
     uint u = rng.NextUInt();
@@ -60,42 +57,28 @@ for (int i = 0; i < 5; i++)
 }
 ```
 
-- Using weighted chance
-```csharp
-using System;
-using XFG.Algorithm;
+Practical notes
 
-struct Choice : Core.IWeighted
-{
-    public string Name;
-    public float Weight { get; }
+- Determinism: given the same seed each `XorShift128Plus` instance produces the same sequence. Use this for reproducible simulations and deterministic gameplay.
+- Threading: generators are not thread-safe. For multithreaded deterministic streams, instantiate a separate PRNG per thread or use synchronization.
+- Seeding: avoid seeding different PRNGs with similar small integers directly. Use `SplitMix64` to expand a small seed into diverse internal state values.
 
-    public Choice(string name, float weight)
-    {
-        Name = name;
-        Weight = weight;
-    }
-}
+Comparison
 
-// select using the global RNG
-Choice[] items = new[]
-{
-    new Choice("common", 70f),
-    new Choice("rare", 25f),
-    new Choice("epic", 5f),
-};
+The table below compares `XorShift128Plus` and `SplitMix64` (as a seeding/scrambling primitive and a lightweight generator). Interpret `Quality` in terms of statistical properties for simulation (not cryptographic strength).
 
-Choice pick = Core.RollWeightedChance(items);
+| Algorithm         | State size | Period       | Speed     | Quality (sim)   | Typical use                                    |
+|------------------:|:----------:|:------------:|:---------:|:----------------:|:-----------------------------------------------|
+| XorShift128Plus   | 128 bits   | ~2^128       | Very fast | Good            | Simulation, deterministic gameplay RNG         |
+| SplitMix64        | 64 bits    | 2^64 (as gen)| Very fast | Moderate        | Seed expansion, short-use generator            |
 
-// select using a local RNG for deterministic simulation
-var localRng = new XorShift128Plus(42UL);
-Choice pick2 = Core.RollWeightedChance(items, localRng);
-```
+Diagram notes
+- "Speed" is qualitative: both are implemented with a few integer operations and are suitable for performance-critical code.
+- "Quality" reflects suitability for statistical simulation and uniformity; neither is cryptographically secure.
+- Use `SplitMix64` primarily for seeding larger generators; use `XorShift128Plus` for generating long reproducible streams.
 
-Notes
-- The implementation uses `SplitMix64` to expand seeds and `XorShift128Plus` for speed and reproducibility.
-- All RNGs are deterministic given the same initial seed.
-- The RNGs are not thread-safe; if you need parallel deterministic streams, instantiate separate PRNGs per thread.
+Extensions and suggestions
 
-If you want, I can add a small unit-test file demonstrating deterministic sequences or add utility extensions (e.g. `Shuffle<T>(this Span<T>, IRandom)`).
+- If you need better statistical guarantees for Monte-Carlo or scientific use, consider PCG or xoshiro/xoroshiro variants with larger state and known equidistribution properties.
+- For deterministic parallel streams, use a jump-ahead method or instantiate per-thread PRNGs with distinct seeds derived from a master seed via `SplitMix64`.
 

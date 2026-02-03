@@ -113,7 +113,3 @@ Troubleshooting
 - Nothing visible? Ensure you are using the correct hook and that the object is selected when using `OnDrawGizmosSelected`.
 - Editor scripts must be in an `Editor` folder to compile into the editor assembly for `OnSceneGUI`.
 
-Extending ShapeDebug
-- Create `ShapeDebug.MyShape.cs` and add methods guarded with `#if UNITY_EDITOR`.
-
-Want a ready-to-drop sample scene or demo prefab showcasing every helper? I can generate that and add example editor tooling.
