@@ -98,3 +98,4 @@ Notes
 - The RNGs are not thread-safe; if you need parallel deterministic streams, instantiate separate PRNGs per thread.
 
 If you want, I can add a small unit-test file demonstrating deterministic sequences or add utility extensions (e.g. `Shuffle<T>(this Span<T>, IRandom)`).
+
