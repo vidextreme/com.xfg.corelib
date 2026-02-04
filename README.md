@@ -1,6 +1,6 @@
 # XFG Simple Game Core Library
 
-[xfg-corelib.jpg]
+(xfg-corelib.jpg)
 
 [Pseudorandom Number Generator (PRNG) Readme](Runtime/Algorithm/Random/README-Random.md)
 
