@@ -1,8 +1,8 @@
-#![xfg corelib](xfg-corelib.png)
+![xfg corelib](xfg-corelib.png)
 
 🎉 Welcome to XFG Simple Game Core Library 🎉
 
----
+## Features
 
 [Pseudorandom Number Generator (PRNG) Readme](Runtime/Algorithm/Random/README-Random.md)
 
@@ -10,7 +10,6 @@
 
 [Discord](https://discord.gg/3GCxggFA6q)
 
----
 
 ## Roadmap
 - Add more PRNG algorithms, such as Mersenne Twister, PCG64, Xoshiro256**, Xoshiro128++
