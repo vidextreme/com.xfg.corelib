@@ -1,7 +1,15 @@
 ﻿# Pseudorandom Number Generator (PRNG) — XFG Simple Game Core Library
 ### Deterministic, Burst‑friendly random utilities for Unity
 
-This document summarizes the pseudorandom number utilities in `Runtime/Algorithm/` and shows usage examples and a compact comparison.
+This package provides a deterministic, allocation‑free pseudorandom number system designed for gameplay, simulation, DOTS, and Burst‑compiled jobs. It includes:
+
+- High‑performance PRNG implementations (`XorShift128Plus`, `PCG32`)
+- Seed expansion utilities (`SplitMix64`)
+- Unity‑style random helpers (range sampling, vector sampling, quaternion sampling)
+- Managed and Burst‑friendly extension sets
+- A deterministic drop‑in replacement for `UnityEngine.Random`
+
+The system is built around the `IRandom` interface, enabling multiple PRNG algorithms to be used interchangeably.
 
 ## 🔢 Implemented primitives
 
@@ -22,6 +30,11 @@ This document summarizes the pseudorandom number utilities in `Runtime/Algorithm
 - **Purpose:** seed expansion / scrambling
 - **Behavior:** given a 64-bit state `x`, `SplitMix64(ref x)` mutates `x` and returns a well-scrambled 64-bit value. It mixes bits thoroughly and is fast.
 - **Use:** initialize the internal state of larger PRNGs (e.g., XorShift128Plus) to avoid correlated starting states.
+- **Performance:** very fast, few integer operations
+- **Quality:** good statistical properties for seeding; not suitable as a long-term generator on its own
+- **Use case:** seeding other PRNGs, short-term random values
+- **Cryptography:** not suitable for cryptographic use
+- **Notes:** avoid using small integer seeds directly for multiple PRNGs; use `SplitMix64` to diversify state.
 
 ### XorShift128Plus
 - **Type:** xorshift+ family (128-bit state)
@@ -32,6 +45,8 @@ This document summarizes the pseudorandom number utilities in `Runtime/Algorithm
 - **Performance:** very fast, minimal branches and integer operations; suitable for tight loops and game logic
 - **Quality:** good statistical properties for gameplay and simulations; not cryptographically secure
 - **Use case:** general-purpose RNG for games, simulations, procedural generation
+- **Cryptography:** not suitable for cryptographic use
+- **Notes:** avoid seeding multiple instances with similar small integers directly; use `SplitMix64` to diversify state.
 
 ### PCG32
 - **Type:** Permuted Congruential Generator (PCG) family
@@ -61,13 +76,36 @@ uint raw = Core.Random.NextUInt();
 ```csharp
 using XFG.Algorithm;
 
-var rng = new XorShift128Plus(123456789UL);
+var rng = new XorShift128Plus(123456789UL); // or new Pcg32(9001);
 for (int i = 0; i < 5; i++)
 {
     uint u = rng.NextUInt();
     float f = rng.NextFloat01();
     int r = rng.NextInt(0, 100);
     UnityEngine.Debug.Log($"u={u}, f={f}, r={r}");
+}
+```
+### SplitMix64 Usage Example
+
+```csharp
+using XFG.Algorithm;
+
+public static class SplitMix64Example
+{
+    public static void Run()
+    {
+        // Start with any 64‑bit seed (user‑provided, time‑based, hashed, etc.)
+        ulong seed = 123456789UL;
+
+        // SplitMix64 mutates the seed and returns a well‑scrambled 64‑bit value.
+        // Each call advances the internal state.
+        ulong a = Core.SplitMix64(ref seed);
+        ulong b = Core.SplitMix64(ref seed);
+        ulong c = Core.SplitMix64(ref seed);
+
+        // These values are now decorrelated and suitable for initializing PRNGs.
+        UnityEngine.Debug.Log($"A={a}, B={b}, C={c}");
+    }
 }
 ```
 
@@ -212,6 +250,71 @@ public struct FillRandomJob : IJobParallelFor
 - Seed deterministically using `SplitMix64` or a similar scheme  
 - Choose the correct namespace for your environment (managed vs. Burst)  
 - Avoid UnityEngine types inside Burst‑compiled code  
+
+---
+
+## Saving and Restoring Random State  
+#### Short How-To Guide
+
+Deterministic systems often need to save, restore, or serialize the state of a PRNG. All XFG PRNGs (XorShift128Plus, PCG32) expose their internal state so you can persist it safely.
+
+### Why Save RNG State?
+- Resume deterministic simulations
+- Rewind or replay gameplay sequences
+- Sync RNG state across networked clients
+- Serialize PRNG state into save files
+
+### Saving State
+Each PRNG exposes its internal fields so you can store them:
+- **XorShift128Plus**: two ulong values
+- **PCG32**: one ulong state + one ulong increment
+
+### Restoring State
+To restore the RNG, construct a new instance using the saved values. The generator will continue producing the exact same sequence from that point.
+
+### Example State Layouts
+#### XorShift128Plus
+- `state0`
+- `state1`
+
+#### PCG32
+- `state`
+- `increment`
+
+### Best Practices
+- Save state after the last random call of the frame
+- Never share a single RNG instance across threads
+- Use SplitMix64 to generate initial seeds
+- Keep RNG state in your save file or ECS component for deterministic replay
+
+### Code Example
+```csharp
+using XFG.Algorithm;
+
+public struct SavedRngState
+{
+    public ulong state0;
+    public ulong state1;
+}
+
+public static class RngStateExample
+{
+    public static SavedRngState Save(XorShift128Plus rng)
+    {
+        return new SavedRngState
+        {
+            state0 = rng.State0,
+            state1 = rng.State1
+        };
+    }
+
+    public static XorShift128Plus Restore(SavedRngState saved)
+    {
+        return new XorShift128Plus(saved.state0, saved.state1);
+    }
+}
+```
+This pattern works identically for **PCG32**, using its `State` and `Increment` fields.
 
 ---
 
