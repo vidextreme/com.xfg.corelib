@@ -1,4 +1,5 @@
-![xfg corelib](xfg-corelib.png)
+![xfg corelib](xfg-corelib.png#gh-dark-mode-only)
+![xfg corelib](xfg-corelib-black.png#gh-dark-mode-only#gh-light-mode-only)
 
 ### Welcome to XFG Simple Game Core Library
 
