@@ -12,6 +12,11 @@ Built for clarity, determinism, and extensibility, with optional Unity/Burst lay
 ### 🤖 PRNG Utilities
 Deterministic pseudorandom generators for reproducible gameplay, procedural generation, and testing.
 
+#### Current Implementations
+- **XorShift128Plus** — fast, high‑quality PRNG with a
+- **SplitMix64** — robust seeding algorithm for initializing PRNG states
+- **PCG32** — statistically sound PRNG with excellent distribution properties
+
 [Pseudorandom Number Generator (PRNG) Readme](Runtime/Algorithm/Random/README-Random.md)
 
 ### 📐 Geometry & Math Utilities
@@ -60,7 +65,7 @@ Or clone the repository directly into your project’s `Packages/` folder.
 
 Planned additions include:
 
-- Additional PRNG algorithms  
+- Additional PRNG algorithms (Xoshiro256**, Xoshiro128++, Mersenne Twister, PCG64)
 - Expanded collision/intersection tests (Ray–Triangle, Capsule–Capsule, SAT)  
 - More debug helpers  
 - Additional Burst‑optimized variants 
