@@ -1,15 +1,75 @@
 ![xfg corelib](xfg-corelib.png)
 
-🎉 Welcome to XFG Simple Game Core Library 🎉
+### Welcome to XFG Simple Game Core Library
 
-## Features
+A lightweight, engine‑agnostic C# foundation for reliable gameplay systems.  
+Built for clarity, determinism, and extensibility, with optional Unity/Burst layers for performance and debugging.
+
+---
+
+## ✨ Features
+
+### PRNG Utilities
+Deterministic pseudorandom generators for reproducible gameplay, procedural generation, and testing.
 
 [Pseudorandom Number Generator (PRNG) Readme](Runtime/Algorithm/Random/README-Random.md)
 
+### 📐 Geometry & Math Utilities
+
+A clean, engine‑agnostic geometry layer providing collision‑ready primitives and spatial reasoning tools.
+
+#### Core Primitives
+- **Line** — infinite line for projections and analytic geometry  
+- **Ray** — semi‑infinite ray for sensing and intersection scaffolding  
+- **Line Segment** — finite segment for hit detection and navigation logic  
+- **Triangle** — fundamental surface primitive for barycentric math and mesh queries  
+- **AABB** — axis‑aligned bounding box for broad‑phase culling and grid‑based partitioning  
+- **OBB** — oriented bounding box for precise collision envelopes and SAT‑based checks  
+- **Frustum** — camera‑style frustum for visibility, culling, and spatial queries  
+- **Cone** — directional volume for AI sensing, field‑of‑view, and detection cones  
+- **Cylinder** — analytic cylinder for volume checks and radial constraints  
+- **Capsule** — segment‑based capsule for character collision, sweeps, and physics queries  
+- **BoundingSphere** — fast broad‑phase culling, distance checks, and spatial queries  
+
+#### Burst Variants
+- **BoundingSphereBurst** — SIMD‑friendly, Unity.Mathematics‑based version for high‑throughput jobs  
+
+#### Debug Integration
+- **ShapeDebug** — optional Unity‑only visualization layer (editor‑only, zero‑cost in builds)
+
 [ShapeDebug Readme](Runtime/Debug/README-ShapeDebug.md)
 
-[Discord](https://discord.gg/3GCxggFA6q)
+**Design Philosophy:**  
+Pure C# core → optional Unity/Burst layers → optional debug layer.  
+Modular, deterministic, and future‑proof for higher‑level collision systems.
+
+---
+
+## 📦 Installation
+
+Install via Unity Package Manager using Git URL:
+
+```https://github.com/vidextreme/com.xfg.corelib.git```
 
 
-## Roadmap
-- Add more PRNG algorithms, such as Mersenne Twister, PCG64, Xoshiro256**, Xoshiro128++
+Or clone the repository directly into your project’s `Packages/` folder.
+
+---
+
+## 🗺️ Roadmap
+
+Planned additions include:
+
+- Additional PRNG algorithms  
+- Expanded collision/intersection tests (Ray–Triangle, Capsule–Capsule, SAT)  
+- More debug helpers  
+- Additional Burst‑optimized variants 
+
+---
+
+## 📄 License
+
+This project is released under the **MIT License**.
+
+
+[Join the community!](https://discord.gg/3GCxggFA6q)
