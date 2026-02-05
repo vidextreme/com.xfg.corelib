@@ -1,5 +1,5 @@
-![xfg corelib](xfg-corelib.png#gh-dark-mode-only)
-![xfg corelib](xfg-corelib-black.png#gh-dark-mode-only#gh-light-mode-only)
+![xfg corelib](Docs/xfg-corelib.png#gh-dark-mode-only)
+![xfg corelib](Docs/xfg-corelib-black.png#gh-dark-mode-only#gh-light-mode-only)
 
 ### Welcome to XFG Simple Game Core Library
 
@@ -18,7 +18,7 @@ Deterministic pseudorandom generators for reproducible gameplay, procedural gene
 - **SplitMix64** — robust seeding algorithm for initializing PRNG states
 - **PCG32** — statistically sound PRNG with excellent distribution properties
 
-[Pseudorandom Number Generator (PRNG) Readme](Runtime/Algorithm/Random/README-Random.md)
+[Pseudorandom Number Generator (PRNG) Readme](Docs/README-Random.md)
 
 ### 📐 Geometry & Math Utilities
 
@@ -43,7 +43,7 @@ A clean, engine‑agnostic geometry layer providing collision‑ready primitives
 #### Debug Integration
 - **ShapeDebug** — optional Unity‑only visualization layer (editor‑only, zero‑cost in builds)
 
-[ShapeDebug Readme](Runtime/Debug/README-ShapeDebug.md)
+[ShapeDebug Readme](Docs/README-ShapeDebug.md)
 
 **Design Philosophy:**  
 Pure C# core → optional Unity/Burst layers → optional debug layer.  
