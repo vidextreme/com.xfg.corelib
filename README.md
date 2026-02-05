@@ -9,7 +9,7 @@ Built for clarity, determinism, and extensibility, with optional Unity/Burst lay
 
 ## ✨ Features
 
-### PRNG Utilities
+### 🤖 PRNG Utilities
 Deterministic pseudorandom generators for reproducible gameplay, procedural generation, and testing.
 
 [Pseudorandom Number Generator (PRNG) Readme](Runtime/Algorithm/Random/README-Random.md)
