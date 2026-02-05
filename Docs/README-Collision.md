@@ -147,6 +147,8 @@ if (hitRay)
 
 ## 🖥️ Debug Visualization
 
+[ShapeDebug Readme](Docs/README-ShapeDebug.md)
+
 ```csharp
 ShapeDebug.DrawCapsule(capsule);
 ShapeDebug.DrawTriangle(triangle);
@@ -158,3 +160,4 @@ if (hit.intersecting)
     ShapeDebug.DrawPoint(hit.point, Color.red);
     ShapeDebug.DrawNormal(hit.point, hit.normal);
 }
+
