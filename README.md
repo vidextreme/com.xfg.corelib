@@ -40,6 +40,8 @@ A clean, engine‑agnostic geometry layer providing collision‑ready primitives
 #### Burst Variants
 - **BoundingSphereBurst** — SIMD‑friendly, Unity.Mathematics‑based version for high‑throughput jobs  
 
+[Collision Readme](Docs/README-Collision.md)
+
 #### Debug Integration
 - **ShapeDebug** — optional Unity‑only visualization layer (editor‑only, zero‑cost in builds)
 
@@ -79,3 +81,4 @@ This project is released under the **MIT License**.
 
 
 [Join the community!](https://discord.gg/3GCxggFA6q)
+
