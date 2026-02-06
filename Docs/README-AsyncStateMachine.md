@@ -11,6 +11,9 @@ This document describes the architecture, design goals, and usage patterns for t
 For the base FSM, see:  
 [StateMachine ReadMe](README-StateMachine.md)
 
+For Hierarchical FSM support, see:  
+[HFSM - ReadMe](README-HierarchicalStateMachine.md)
+
 ---
 
 ## Features

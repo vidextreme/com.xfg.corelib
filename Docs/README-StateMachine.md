@@ -12,6 +12,9 @@ This document describes the architecture, design goals, and usage patterns for t
 For async support, see:  
 [Async StateMachine - ReadMe](README-AsyncStateMachine.md)
 
+For Hierarchical FSM support, see:  
+[HFSM - ReadMe](README-HierarchicalStateMachine.md)
+
 ---
 
 ## Features
