@@ -27,22 +27,30 @@ A lightweight, extensible state machine framework designed for gameplay, AI, UI 
 ### Core Features
 - **Synchronous StateMachine** — simple, predictable, engine‑agnostic  
 - **AsyncStateMachine** — supports async/await for loading flows, network waits, cutscenes, etc.  
-- **HFSM (Hierarchical StateMachine)** — nested states with parent/child relationships for complex behaviors  
+- **HFSM (Hierarchical StateMachine)** — nested parent/child states for layered behaviors  
+- **Pushdown StateMachine (Stack‑based FSM)** — supports state stacking, pausing, and resuming  
 - **Explicit Enter/Exit semantics** — clean lifecycle boundaries  
-- **Strong typing** — state classes are explicit, discoverable, and testable  
+- **Strong typing** — explicit state classes, discoverable and testable  
 - **Minimal boilerplate** — fast to onboard, easy to extend  
-
-### HFSM Capabilities
-- Parent states can own child states  
-- Automatic bubbling of Enter/Exit through the hierarchy  
-- Shared logic at higher levels, specialized behavior in leaf states  
-- Ideal for AI behavior trees, combat systems, UI flows, and multi‑layered gameplay logic  
 
 ### Design Goals
 - Deterministic behavior  
 - Clear separation of concerns  
 - Easy debugging and logging  
 - Works in any .NET environment (Unity optional)
+
+### Hierarchical FSM Capabilities
+- Parent states own child states  
+- Enter/Exit automatically bubble through the hierarchy  
+- Shared logic at higher levels, specialized behavior in leaf states  
+- Ideal for AI, combat systems, UI flows, and layered gameplay logic  
+
+### Pushdown FSM Capabilities
+- Stack‑based state transitions (`Push`, `Pop`, `Replace`)  
+- Perfect for menus, modal UI, pause screens, nested gameplay modes  
+- States can be paused and resumed without losing internal state  
+- Clean separation between transient and persistent behaviors  
+
 
 [State Machine Readme](Docs/README-StateMachine.md)
 

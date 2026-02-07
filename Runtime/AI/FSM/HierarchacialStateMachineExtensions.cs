@@ -28,7 +28,7 @@ namespace XFG.AI.FSM.Hierarchical
     /// This design keeps the base FSM simple while enabling layered behavior
     /// such as movement -> locomotion -> running, combat -> melee -> combo, etc.
     /// </summary>
-    public static class HFSMExtensions
+    public static class HierarchacialStateMachineExtensions
     {
         // --------------------------------------------------------------------
         //  HIERARCHICAL STATE INTERFACE
