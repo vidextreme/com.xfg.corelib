@@ -13,16 +13,19 @@ Built for clarity, determinism, and extensibility, with optional Unity/Burst lay
 ### 🤖 PRNG Utilities
 Deterministic pseudorandom generators for reproducible gameplay, procedural generation, and testing.
 
+[Pseudorandom Number Generator (PRNG) Readme](Docs/README-Random.md)
+
 #### Current Implementations
 - **XorShift128Plus** — fast, high‑quality PRNG with a
 - **SplitMix64** — robust seeding algorithm for initializing PRNG states
 - **PCG32** — statistically sound PRNG with excellent distribution properties
 
-[Pseudorandom Number Generator (PRNG) Readme](Docs/README-Random.md)
 
 ## 🧠 StateMachine System
 
 A lightweight, extensible state machine framework designed for gameplay, AI, UI flow, and asynchronous logic.
+
+[State Machine Readme](Docs/README-StateMachine.md)
 
 ### Core Features
 - **Synchronous StateMachine** — simple, predictable, engine‑agnostic  
@@ -52,12 +55,12 @@ A lightweight, extensible state machine framework designed for gameplay, AI, UI 
 - Clean separation between transient and persistent behaviors  
 
 
-[State Machine Readme](Docs/README-StateMachine.md)
-
 
 ### 📐 Geometry & Math Utilities
 
 A clean, engine‑agnostic geometry layer providing collision‑ready primitives and spatial reasoning tools.
+
+[Collision Readme](Docs/README-Collision.md)
 
 #### Core Primitives
 - **Line** — infinite line for projections and analytic geometry  
@@ -70,21 +73,20 @@ A clean, engine‑agnostic geometry layer providing collision‑ready primitives
 - **Cone** — directional volume for AI sensing, field‑of‑view, and detection cones  
 - **Cylinder** — analytic cylinder for volume checks and radial constraints  
 - **Capsule** — segment‑based capsule for character collision, sweeps, and physics queries  
-- **BoundingSphere** — fast broad‑phase culling, distance checks, and spatial queries  
+- **Sphere** — fast broad‑phase culling, distance checks, and spatial queries  
+
+**Design Philosophy:**  
+Pure C# core → optional Unity/Burst layers → optional debug layer.  
+Modular, deterministic, and future‑proof for higher‑level collision systems.
 
 #### Burst Variants
 - **BoundingSphereBurst** — SIMD‑friendly, Unity.Mathematics‑based version for high‑throughput jobs  
-
-[Collision Readme](Docs/README-Collision.md)
 
 #### Debug Integration
 - **ShapeDebug** — optional Unity‑only visualization layer (editor‑only, zero‑cost in builds)
 
 [ShapeDebug Readme](Docs/README-ShapeDebug.md)
 
-**Design Philosophy:**  
-Pure C# core → optional Unity/Burst layers → optional debug layer.  
-Modular, deterministic, and future‑proof for higher‑level collision systems.
 
 ---
 
