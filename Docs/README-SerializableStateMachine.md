@@ -117,13 +117,10 @@ public TState[] States;
 ```
 
 ### Why this is important
-Supports polymorphic state definitions
-
-Unity can serialize derived classes
-
-States appear directly in the inspector
-
-Each state is registered automatically in **Awake()**
+- Supports polymorphic state definitions
+- Unity can serialize derived classes
+- States appear directly in the inspector
+- Each state is registered automatically in **Awake()**
 
 ## 🔄 Lifecycle
 
