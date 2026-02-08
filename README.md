@@ -21,38 +21,47 @@ Deterministic pseudorandom generators for reproducible gameplay, procedural gene
 - **PCG32** — statistically sound PRNG with excellent distribution properties
 
 
-## 🧠 StateMachine System
+### 🧠 StateMachine System
 
-A lightweight, extensible state machine framework designed for gameplay, AI, UI flow, and asynchronous logic.
+A flexible, engine‑agnostic framework for gameplay, AI, UI flow, and asynchronous logic, with optional Unity Inspector serialization for debugging and authoring.
 
 [State Machine Readme](Docs/README-StateMachine.md)
 
-### Core Features
-- **Synchronous StateMachine** — simple, predictable, engine‑agnostic  
-- **AsyncStateMachine** — supports async/await for loading flows, network waits, cutscenes, etc.  
-- **HFSM (Hierarchical StateMachine)** — nested parent/child states for layered behaviors  
-- **Pushdown StateMachine (Stack‑based FSM)** — supports state stacking, pausing, and resuming  
-- **Explicit Enter/Exit semantics** — clean lifecycle boundaries  
-- **Strong typing** — explicit state classes, discoverable and testable  
-- **Minimal boilerplate** — fast to onboard, easy to extend  
+#### Core Features
+- **StateMachine** — simple, predictable synchronous FSM  
+- **AsyncStateMachine** — async/await support for loading, networking, cutscenes  
+- **HFSM (Hierarchical FSM)** — parent/child states for layered behaviors  
+- **Pushdown FSM** — stack‑based states with PushState<T>(), PopState(), ReplaceState<T>()  
+- **Unity Inspector Serialization** — FSMs and states can be serialized and visualized in the Unity Editor  
+- **Explicit Enter/Exit** — clean lifecycle boundaries  
+- **Strong typing** — explicit, testable state classes  
 
-### Design Goals
-- Deterministic behavior  
-- Clear separation of concerns  
-- Easy debugging and logging  
-- Works in any .NET environment (Unity optional)
+#### Unity Serialization Support
+- FSMs implement **ISerializableStateMachine** for Unity‑friendly serialization  
+- States implement **ISerializableState** to expose internal data in the Inspector  
+- Supports serialization of:
+  - Active state  
+  - HFSM hierarchy  
+  - Pushdown stack contents  
+  - State‑specific fields  
+- Enables:
+  - Inspector debugging  
+  - Authoring workflows  
+  - Live state visualization  
+  - Editor tooling and extensions  
 
-### Hierarchical FSM Capabilities
-- Parent states own child states  
-- Enter/Exit automatically bubble through the hierarchy  
-- Shared logic at higher levels, specialized behavior in leaf states  
-- Ideal for AI, combat systems, UI flows, and layered gameplay logic  
+This system is designed for Unity workflows but remains engine‑agnostic at its core.
 
-### Pushdown FSM Capabilities
-- Stack‑based state transitions (`Push`, `Pop`, `Replace`)  
+#### HFSM Capabilities
+- Nested states with shared parent logic  
+- Automatic Enter/Exit bubbling  
+- Ideal for AI, combat, UI, and multi‑layered systems  
+
+#### Pushdown FSM Capabilities
+- **PushState<TState>()** — push a new state on the stack  
+- **PopState()** — pop and resume the previous state  
+- **ReplaceState<TState>()** — atomic replace without resuming underlying state  
 - Perfect for menus, modal UI, pause screens, nested gameplay modes  
-- States can be paused and resumed without losing internal state  
-- Clean separation between transient and persistent behaviors  
 
 
 
