@@ -11,6 +11,9 @@ This document describes the architecture, design goals, and usage patterns for t
 For the base FSM, see:  
 [StateMachine ReadMe](README-StateMachine.md)
 
+For Serializable FSM support, see:  
+[Serializable State Machine - ReadMe](README-SerializableStateMachine.md)
+
 For async support, see:  
 [Async StateMachine - ReadMe](README-AsyncStateMachine.md)
 

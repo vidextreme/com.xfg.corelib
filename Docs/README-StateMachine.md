@@ -9,6 +9,9 @@ The `IStateMachine` module provides the foundational finite state machine used t
 
 This document describes the architecture, design goals, and usage patterns for the FSM.
 
+For Serializable FSM support, see:  
+[Serializable State Machine - ReadMe](README-SerializableStateMachine.md)
+
 For async support, see:  
 [Async StateMachine - ReadMe](README-AsyncStateMachine.md)
 

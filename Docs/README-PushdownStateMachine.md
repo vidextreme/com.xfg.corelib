@@ -11,6 +11,9 @@ This is ideal for menus, cutscenes, stun states, dialogue windows, and any situa
 For the base FSM, see:  
 [StateMachine ReadMe](README-StateMachine.md)
 
+For Pushdown FSM support, see:  
+[Serializable State Machine - ReadMe](README-SerializableStateMachine.md)
+
 For async support, see:  
 [Async StateMachine - ReadMe](README-AsyncStateMachine.md)
 
