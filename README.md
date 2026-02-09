@@ -10,6 +10,12 @@ Built for clarity, determinism, and extensibility, with optional Unity/Burst lay
 
 ## ✨ Features
 
+- [🤖 PRNG Utilities](#-prng-utilities)
+- [🧠 StateMachine System](#-statemachine-system)
+- [🧠 Utility AI System](#-utility-ai-system)
+- [📐 Geometry & Math Utilities](#-geometry--math-utilities)
+
+
 ### 🤖 PRNG Utilities
 Deterministic pseudorandom generators for reproducible gameplay, procedural generation, and testing.
 
