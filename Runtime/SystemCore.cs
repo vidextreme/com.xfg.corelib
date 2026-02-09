@@ -1,3 +1,6 @@
+// Copyright (c) 2026 John David Uy
+// Licensed under the MIT License. See LICENSE for details.
+
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,7 +11,20 @@ namespace XFG
         [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
         public sealed class SerializableClassAttribute : PropertyAttribute
         {
+            // Optional base type override for the managed reference field.
+            public Type BaseType;
 
+            // Optional icon overrides.
+            // 1) Unity built-in icon name (e.g. "d_ScriptableObject Icon").
+            public string IconName;
+
+            // 2) Use the icon of another type.
+            public Type IconType;
+
+            // 3) Direct texture override.
+            public Texture CustomIcon;
+
+            public SerializableClassAttribute() { }
         }
     }
     public class SimpleSingleton<T> : MonoBehaviour where T : MonoBehaviour

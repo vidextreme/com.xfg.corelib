@@ -6,15 +6,19 @@
 A lightweight, engine‑agnostic C# foundation for reliable gameplay systems.  
 Built for clarity, determinism, and extensibility, with optional Unity/Burst layers for performance and debugging.
 
----
-
-## ✨ Features
+#### 📘 Quick Jump
 
 - [🤖 PRNG Utilities](#-prng-utilities)
 - [🧠 StateMachine System](#-statemachine-system)
 - [🧠 Utility AI System](#-utility-ai-system)
 - [📐 Geometry & Math Utilities](#-geometry--math-utilities)
+- [📦 Installation](#-installation)
+- [🗺️ Roadmap](#-roadmap)
+- [📄 License](#-license)
 
+---
+
+## ✨ Features
 
 ### 🤖 PRNG Utilities
 Deterministic pseudorandom generators for reproducible gameplay, procedural generation, and testing.
@@ -145,10 +149,22 @@ Or clone the repository directly into your project’s `Packages/` folder.
 
 Planned additions include:
 
-- Additional PRNG algorithms (Xoshiro256**, Xoshiro128++, Mersenne Twister, PCG64)
-- Expanded collision/intersection tests (Ray–Triangle, Capsule–Capsule, SAT)  
-- More debug helpers  
-- Additional Burst‑optimized variants 
+* PRNG
+  * Additional PRNG algorithms (Xoshiro256**, Xoshiro128++, Mersenne Twister, PCG64)
+* Collision
+  * Expanded collision/intersection tests (Ray–Triangle, Capsule–Capsule, SAT)  
+  * Additional Burst‑optimized variants
+* Systems 
+  * Templated Global Event System
+  * Action System
+  * UI Manager
+  * Game Mode System
+* Math
+  * Curve
+  * Statistics
+  * A*
+* Extensions
+  * Unity types extensions (Component, Transform, etc.)
 
 ---
 
@@ -158,4 +174,7 @@ This project is released under the **MIT License**.
 
 
 [Join the community!](https://discord.gg/3GCxggFA6q)
+
+### Main Author: 
+John David Uy (https://www.linkedin.com/in/johndaviduy/ >> Connect with me!)
 
