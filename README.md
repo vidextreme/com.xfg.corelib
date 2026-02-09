@@ -63,6 +63,31 @@ This system is designed for Unity workflows but remains engine‑agnostic at its
 - **ReplaceState<TState>()** — atomic replace without resuming underlying state  
 - Perfect for menus, modal UI, pause screens, nested gameplay modes  
 
+## 🧠 Utility AI System
+
+A modular, designer‑friendly Utility AI framework built for scalable decision‑making in gameplay and AI systems.
+
+[Utility AI Readme](Docs/README-UtilityAI.md)
+
+### Core Features
+- **Action‑based architecture** — each action defines its own scoring logic  
+- **Weighted scoring** — combine multiple considerations into a final utility value  
+- **Considerations** — reusable scoring components (curves, clamps, multipliers, timers)  
+- **Temporal control** — cooldowns, score decay, and gating logic  
+- **Deterministic evaluation** — stable, predictable decision outcomes  
+- **Engine‑agnostic core** — pure C# logic with optional Unity Inspector integration  
+
+### Unity Inspector Support
+- Fully serializable actions, considerations, and AI agents  
+- Designer‑friendly inspector layout for tuning and debugging  
+- Optional live score visualization  
+- Supports nested consideration graphs  
+
+### Design Goals
+- Scalable for large AI systems  
+- Easy to author and debug  
+- Predictable and deterministic  
+- Extensible for custom scoring logic  
 
 
 ### 📐 Geometry & Math Utilities
