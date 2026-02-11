@@ -154,6 +154,104 @@ It provides Unity‑style APIs such as:
 
 All deterministic, seedable, and allocation‑free.
 
+## 🔄 Drop‑In Replacement for `UnityEngine.Random`
+
+If you want deterministic, Burst‑friendly randomness while keeping a Unity‑style API, you can replace calls to `UnityEngine.Random` with the XFG PRNG suite.
+
+### Minimal Drop‑In Replacement (Unity‑style API)
+
+```csharp
+using XFG.Algorithm;
+
+public class Example : MonoBehaviour
+{
+    void Start()
+    {
+        // Equivalent to UnityEngine.Random.value
+        float v = Core.Random.NextFloat01();
+
+        // Equivalent to UnityEngine.Random.Range(0, 10)
+        int r = Core.Random.NextInt(0, 10);
+
+        // Equivalent to UnityEngine.Random.Range(-5f, 5f)
+        float f = Core.Random.NextFloat(-5f, 5f);
+
+        // Equivalent to UnityEngine.Random.insideUnitSphere
+        Vector3 p = Core.Random.NextInsideUnitSphere();
+
+        Debug.Log($"v={v}, r={r}, f={f}, p={p}");
+    }
+}
+```
+
+This uses the **shared global RNG** provided by XFG.  
+It behaves like Unity’s global RNG — but is **deterministic**, **thread‑safe by design** (when used per‑thread), and **Burst‑friendly**.
+
+---
+
+### Recommended: Explicit Per‑Instance RNG (Deterministic Simulation)
+
+```csharp
+using XFG.Algorithm;
+
+public class DeterministicExample : MonoBehaviour
+{
+    private XorShift128Plus rng;
+
+    void Awake()
+    {
+        // Deterministic seed
+        rng = new XorShift128Plus(123456789UL);
+    }
+
+    void Update()
+    {
+        float v = rng.NextFloat01();
+        int r = rng.NextInt(0, 100);
+        Vector3 dir = rng.NextInsideUnitSphere();
+
+        Debug.Log($"v={v}, r={r}, dir={dir}");
+    }
+}
+```
+
+This pattern is ideal for:
+
+- deterministic gameplay  
+- lockstep networking  
+- replay systems  
+- procedural generation  
+- Burst/DOTS jobs (swap to `XFG.AlgorithmBurst`)  
+
+Each instance produces a **fully reproducible** sequence.
+
+---
+
+### Burst / DOTS Version (float2/float3/quaternion)
+
+```csharp
+using Unity.Mathematics;
+using XFG.AlgorithmBurst;
+
+public struct RandomJob : IJob
+{
+    public void Execute()
+    {
+        var rng = new XorShift128Plus(1234);
+
+        float3 p = rng.NextInsideUnitSphere();
+        float f = rng.NextFloat(0f, 1f);
+        uint u = rng.NextUInt();
+
+        // Use values inside Burst job...
+    }
+}
+```
+
+This version uses **Unity.Mathematics** types and is fully Burst‑compatible.
+
+
+
 ---
 
 # 📦 Namespaces
