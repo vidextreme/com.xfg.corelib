@@ -11,6 +11,8 @@ This package provides a deterministic, allocation‑free pseudorandom number sys
 
 The system is built around the `IRandom` interface, enabling multiple PRNG algorithms to be used interchangeably.
 
+[Why Not to Use UnityEngine.Random Readme](README-WhyNotUseUnityRandom.md)
+
 ## 🔢 Implemented primitives
 
 - `SplitMix64` — high-quality 64-bit scramble function used to expand seeds. Typically used to initialize PRNG state; it can also be used as a simple generator for short sequences.

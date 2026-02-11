@@ -25,6 +25,8 @@ Deterministic pseudorandom generators for reproducible gameplay, procedural gene
 
 [Pseudorandom Number Generator (PRNG) Readme](Docs/README-Random.md)
 
+[Why Not to Use UnityEngine.Random Readme](Docs/README-WhyNotUseUnityRandom.md)
+
 #### Current Implementations
 - **XorShift128Plus** — fast, high‑quality PRNG with a
 - **SplitMix64** — robust seeding algorithm for initializing PRNG states
