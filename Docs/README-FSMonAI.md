@@ -1,7 +1,24 @@
-# 🧠Finite State Machine (FSM) for AI — Why They Matter
+# 🧠FSMs for AI — Why They Matter
 
-![fsm-man](fsm-man.png)
+<table>
+<tr>
+<td width="500">
 
+<img width="500" src="fsm-man.png">
+
+</td>
+<td>
+
+# What Is a Finite State Machine (FSM)?
+
+- An FSM is a model where an agent is always in **exactly one state**.
+- Behavior is defined by:
+  - The **current state**
+  - **Events or messages** the machine receives
+  - **Transitions** that move the agent to a new state
+- FSMs make behavior **predictable, explicit, and testable**.
+
+## FSM for NPCs?
 - AI agents need **predictable, explainable behavior**.
 - FSMs model behavior as a set of **distinct modes**:
   - Idle  
@@ -13,17 +30,43 @@
 - Guarantees the AI is always in a **valid, intentional state**.
 - Perfect for enemies, companions, bosses, NPCs, and scripted sequences.
 
+
+</td>
+</tr>
+</table>
+
+
 ---
 
 # Why FSMs Are Ideal for AI
 
-- **Deterministic** — no ambiguous or hidden logic.
-- **Modular** — each behavior lives in its own state class.
-- **Debuggable** — AI is always in exactly one state.
-- **Extendable** — add new behaviors without rewriting the system.
-- **Designer‑friendly** — easy to visualize and reason about.
+- **Deterministic** — AI is always in one clear state; behavior is predictable.
+- **Modular** — each behavior lives in its own state class; no logic bleed‑through.
+- **Explicit transitions** — AI only changes behavior when the machine says so.
+- **Lightweight** — constant‑time updates; scales to large crowds.
+- **Easy to debug** — you always know what state the AI was in and why it changed.
+- **Designer‑friendly** — simple to visualize, storyboard, and tune.
+- **Great for reactive AI** — messages route cleanly to the active state.
+- **Ideal for phase‑based or scripted behavior** — boss phases, sequences, telegraphs.
+- **Plays well with other systems** — Utility AI, Behavior Trees, Navigation, Animation.
+
 
 ---
+
+# The XFG IStateMachine
+
+**IStateMachine is XFG’s engine‑grade implementation of a Finite State Machine.**  
+It provides the foundation for all XFG AI behavior systems and extension layers.
+
+- Strongly‑typed, deterministic FSM core  
+- Clean separation between machine logic and state behavior  
+- Predictable transition pipeline  
+- Fully compatible with:
+  - XFG Async FSM  
+  - XFG Pushdown FSM  
+  - XFG Hierarchical FSM  
+  - XFG Serializable FSM  
+- Designed for clarity, extensibility, and onboarding‑friendly workflows
 
 # IStateMachine — Core Responsibilities
 
