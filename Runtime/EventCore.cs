@@ -12,12 +12,16 @@ namespace XFG
         private static readonly Dictionary<string, GameEvent> _eventBag = new();
         public static void SubscribeEvent(string eventName, GameEvent gameEvent)
         {
-            if(_eventBag.TryGetValue(eventName, out var existing))
+            if (_eventBag.TryGetValue(eventName, out var existing))
             {
                 existing += gameEvent;
+                _eventBag[eventName] = existing;
+            }
+            else
+            {
+                _eventBag[eventName] = gameEvent;
             }
 
-            _eventBag[eventName] = gameEvent;
         }
         public static void UnsubscribeEvent(string eventName, GameEvent gameEvent)
         {

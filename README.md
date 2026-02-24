@@ -9,6 +9,7 @@ Built for clarity, determinism, and extensibility, with optional Unity/Burst lay
 #### 📘 Quick Jump
 
 - [🤖 PRNG Utilities](#-prng-utilities)
+- [⚡ Global EventX](#-global-eventx)
 - [🧠 StateMachine System](#-statemachine-system)
 - [🧠 Utility AI System](#-utility-ai-system)
 - [📐 Geometry & Math Utilities](#-geometry--math-utilities)
@@ -32,6 +33,19 @@ Deterministic pseudorandom generators for reproducible gameplay, procedural gene
 - **SplitMix64** — robust seeding algorithm for initializing PRNG states
 - **PCG32** — statistically sound PRNG with excellent distribution properties
 
+### ⚡ Global EventX
+
+A zero-allocation, thread-safe, strongly-typed event system for com.xfg.corelib. Designed for high-performance, engine-agnostic gameplay code without reflection, params object[], DynamicInvoke, or per-broadcast allocations.
+
+#### Core Features
+- Supports any KeyType (string, enum, struct, EventId, etc.)
+- Strongly-typed delegates (Action, Action<T1>, Action<T1,T2>, Action<T1,T2,T3>, Action<T1,T2,T3,T4>)
+- Zero allocations during broadcast
+- Thread-safe via ConcurrentDictionary
+- Up to 4 parameters per event
+- Engine-agnostic C# core with optional Unity integration
+
+[Global EventX Readme](Docs/README-GlobalEventX.md)
 
 ### 🧠 StateMachine System
 
