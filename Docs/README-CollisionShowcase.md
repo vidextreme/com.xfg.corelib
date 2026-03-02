@@ -1,4 +1,5 @@
-# XFG Collision Library  
+# 💥XFG Collision Library  
+#### Part of the XFG Simple Game Core Library `com.xfg.corelib`
 ### High‑Performance Geometry for Games, Tools, and Simulation
 
 The XFG Collision Library is a deterministic, allocation‑free geometry engine designed for real‑time applications such as gameplay, visibility, physics broadphase, and editor tooling. It provides a complete set of convex primitives, a fully symmetric collision matrix, and Burst‑friendly math with no GC allocations and no engine dependencies.
@@ -78,7 +79,7 @@ bool hit = frustum.IntersectsSegment(p0, p1);
 
 ---
 
-## Collision Matrix (GitHub‑Compatible Table)
+## Collision Matrix
 
 | Shape     | AABB | Sphere | Capsule | Cylinder | Cone | Segment | Triangle | OBB | Frustum |
 |-----------|------|--------|---------|----------|------|---------|----------|-----|----------|
