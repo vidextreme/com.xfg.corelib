@@ -13,6 +13,7 @@
 // - Closest points between segment and ray
 // - Segment vs segment closest points
 // - Segment vs segment squared distance
+// - Closest point on segment to AABB
 // - Distance to point
 // - Segment length and direction
 //
@@ -54,7 +55,6 @@ namespace XFG.Math
             return o + d * t;
         }
 
-        // Overload: origin + direction
         public static Vector3 ClosestPointOnRayToPoint(Vector3 origin, Vector3 direction, Vector3 point)
         {
             return ClosestPointOnRayToPoint(new Ray(origin, direction), point);
@@ -77,7 +77,6 @@ namespace XFG.Math
             return a + ab * t;
         }
 
-        // Aliases
         public static Vector3 ClosestPointOnSegmentToPoint(Vector3 a, Vector3 b, Vector3 point)
         {
             return ClosestPoint(a, b, point);
@@ -86,6 +85,77 @@ namespace XFG.Math
         public static Vector3 ClosestPointOnSegment(Vector3 a, Vector3 b, Vector3 point)
         {
             return ClosestPoint(a, b, point);
+        }
+
+        // ==========================================================================
+        // CLOSEST POINT ON SEGMENT TO AABB
+        // ==========================================================================
+        /// <summary>
+        /// Returns the closest point on a line segment to an axis-aligned bounding box.
+        /// Uses the slab method to compute the earliest valid intersection parameter.
+        /// </summary>
+        public static Vector3 ClosestPointOnSegmentToAABB(
+            Vector3 p0,
+            Vector3 p1,
+            Vector3 aabbMin,
+            Vector3 aabbMax)
+        {
+            Vector3 dir = p1 - p0;
+            float lenSq = dir.sqrMagnitude;
+
+            // Degenerate segment: treat as point
+            if (lenSq < 1e-12f)
+                return ClosestPointOnAABB(p0, aabbMin, aabbMax);
+
+            float tMin = 0f;
+            float tMax = 1f;
+
+            // Slab intersection on each axis
+            for (int axis = 0; axis < 3; axis++)
+            {
+                float origin = p0[axis];
+                float direction = dir[axis];
+
+                // Parallel to slab
+                if (Mathf.Abs(direction) < 1e-12f)
+                {
+                    if (origin < aabbMin[axis] || origin > aabbMax[axis])
+                        return ClosestPointOnAABB(p0, aabbMin, aabbMax);
+                }
+                else
+                {
+                    float inv = 1f / direction;
+                    float t1 = (aabbMin[axis] - origin) * inv;
+                    float t2 = (aabbMax[axis] - origin) * inv;
+
+                    if (t1 > t2)
+                    {
+                        float tmp = t1;
+                        t1 = t2;
+                        t2 = tmp;
+                    }
+
+                    if (t1 > tMin) tMin = t1;
+                    if (t2 < tMax) tMax = t2;
+
+                    if (tMin > tMax)
+                        break;
+                }
+            }
+
+            float t = Mathf.Clamp01(tMin);
+            return p0 + dir * t;
+        }
+
+        /// <summary>
+        /// Returns the closest point on an AABB to a given point.
+        /// </summary>
+        public static Vector3 ClosestPointOnAABB(Vector3 point, Vector3 min, Vector3 max)
+        {
+            float x = Mathf.Clamp(point.x, min.x, max.x);
+            float y = Mathf.Clamp(point.y, min.y, max.y);
+            float z = Mathf.Clamp(point.z, min.z, max.z);
+            return new Vector3(x, y, z);
         }
 
         // ==========================================================================

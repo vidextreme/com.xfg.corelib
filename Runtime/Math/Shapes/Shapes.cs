@@ -9,6 +9,7 @@
 // - Capsule
 // - Cylinder
 // - Cone
+// - Frustrum
 //
 // All structs are deterministic, allocation-free, and suitable for Burst jobs.
 // ------------------------------------------------------------------------------
@@ -126,6 +127,36 @@ namespace XFG.Math.Shape
             float localRadius = (t / Height) * Radius;
 
             return (p - axisPoint).sqrMagnitude <= localRadius * localRadius;
+        }
+    }
+
+    // ==========================================================================
+    // FRUSTUM
+    // ==========================================================================
+    public struct Frustum
+    {
+        public Plane Left;
+        public Plane Right;
+        public Plane Bottom;
+        public Plane Top;
+        public Plane Near;
+        public Plane Far;
+
+        public Plane this[int i]
+        {
+            get
+            {
+                switch (i)
+                {
+                    case 0: return Left;
+                    case 1: return Right;
+                    case 2: return Bottom;
+                    case 3: return Top;
+                    case 4: return Near;
+                    case 5: return Far;
+                }
+                return Left;
+            }
         }
     }
 }
