@@ -47,7 +47,7 @@ namespace XFG.AI.FSM.Serializable
         // - HFSM parent/child relationships can be defined inside state classes
         // ----------------------------------------------------------------------
 
-        [SerializeReference, Core.SerializableClass]
+        [SerializeReference]
         public TState[] States;
 
         // ----------------------------------------------------------------------
