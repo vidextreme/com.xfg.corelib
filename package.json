@@ -1,6 +1,6 @@
 {
     "name" : "com.xfg.corelib",
-    "version": "0.1.0",
+    "version": "0.2.2",
 	"author" : "John David Uy",
     "displayName": "XFG Simple Game Core Library"
 }
