@@ -6,8 +6,8 @@ Built for Unity, Godot, MonoGame, and custom engines.
 - Deterministic **command buffer**  
 - Strongly‑typed **FSM**  
 - Engine‑agnostic core with conditional compilation  
-- Supports **player input**, **AI**, **networking**, **cutscenes**, **tools**  
-- Inspired by Unreal’s Actor–Controller model, adapted for C#
+- Supports **player input**, **AI**, **networking**, **cutscenes**, **tools**, **Utility AI**, **Behavior Trees**, **FSM AI**, **Replay**, and more  
+- Inspired by Unreal Engine’s Actor–Controller model, adapted for C#
 
 ---
 
@@ -26,6 +26,29 @@ This architecture is built around a strict separation of responsibilities that p
 - Clean layering for large‑scale gameplay systems  
 - Easy to test, debug, and extend  
 - Works identically for AI, player input, network commands, and tools  
+
+---
+
+# 🎛️ **Controllers — The Decision Layer**
+Controllers are the **brains** of the architecture.  
+They decide what the Actor should do — the Actor only executes.
+
+### Controllers can be:
+- Player Input  
+- Behavior Tree (B3)  
+- Utility AI  
+- FSM logic  
+- Network replication  
+- Scripted / Cutscene logic  
+- Replay / Ghost input  
+- Tooling / Editor drivers  
+
+### Why this works:
+- Controllers only call `ExecuteCommand()`  
+- Actors only execute commands  
+- States encapsulate behavior  
+- Inform() provides feedback  
+- Command buffer ensures determinism  
 
 ---
 
@@ -54,15 +77,15 @@ You preserve Unreal’s strengths while making the model portable, explicit, det
 
 | Concept / Behavior | Unreal Engine | XFG Actor–Controller Architecture |
 |--------------------|---------------|----------------------------------|
-| **Decision Layer** | Controller (PlayerController, AIController) | Controller (PlayerInputController, AIController, NetworkController) |
+| **Decision Layer** | Controller (PlayerController, AIController) | Controller (Input, AI, B3, Utility AI, FSM, Network, Replay) |
 | **Execution Layer** | Pawn / Character | Actor (FSM‑driven entity) |
 | **How Decisions Are Sent** | Input events, movement functions, ability triggers | Typed commands via `ExecuteCommand(cmd, param)` |
 | **How Execution Happens** | Pawn processes input, CharacterMovement, components | Actor processes commands through FSM + command buffer |
-| **Feedback to Controller** | Delegates, events (OnLanded, OnJumped, etc.) | `Inform(info, args)` callback |
+| **Feedback to Controller** | Delegates, events | `Inform(info, args)` callback |
 | **Possession Model** | Controller possesses Pawn | Controller attaches to Actor |
-| **State Management** | State Trees, Behavior Trees, components | Strongly‑typed FSM with polymorphic states |
+| **State Management** | State Trees, Behavior Trees | Strongly‑typed FSM with polymorphic states |
 | **Determinism** | Not guaranteed | Guaranteed via command buffer + FSM |
-| **Engine Dependency** | Unreal‑specific | Engine‑agnostic (Unity, Godot, MonoGame, custom engines) |
+| **Engine Dependency** | Unreal‑specific | Engine‑agnostic |
 | **Serialization** | Blueprint, UObjects | `SerializeReference` polymorphic states (Unity) |
 
 ---
@@ -100,13 +123,14 @@ This makes the system ideal for cross‑engine prototyping or long‑term engine
 - Processes buffered input  
 - Emits Inform events back to Controller  
 - Defines per‑state behavior through polymorphic state classes  
+- Never performs decision‑making  
 
 ### **Controller**
 - Decides what the Actor should do  
 - Sends typed commands  
 - Reacts to Actor events via `Inform()`  
 - Never mutates Actor state directly  
-- Can be swapped (AI, player, network, scripted)  
+- Can be swapped (AI, player, network, scripted, Utility AI, B3, FSM, Replay)  
 
 ### **Command Buffer**
 - FIFO  
@@ -161,6 +185,7 @@ This creates a clean, deterministic gameplay loop.
 ---
 
 # 🧱 **Serialized State Machines (Unity)**
+
 For designer‑friendly workflows, the architecture supports a fully serialized FSM.
 
 ### Features:

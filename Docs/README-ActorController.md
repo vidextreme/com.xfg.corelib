@@ -1,7 +1,7 @@
 # 🎮 Actor–Controller Architecture with Command Buffer
 
 A lightweight, deterministic, and extensible Actor–Controller framework for Unity, Godot, MonoGame, and custom engines.  
-Designed for gameplay systems that require clean separation between **decision‑making** (Controllers) and **execution** (Actors), with support for **AI**, **player input**, **network commands**, and **editor‑authored FSM states**.
+Designed for gameplay systems that require clean separation between **decision‑making** (Controllers) and **execution** (Actors), with support for **AI**, **player input**, **network commands**, **cutscenes**, **tools**, and **designer‑authored FSM states**.
 
 This module is part of the **XFG Simple Game Core Library**, a collection of engine‑agnostic C# systems for building reliable, deterministic gameplay foundations.
 
@@ -13,7 +13,7 @@ The architecture is inspired by Unreal Engine’s Actor–Controller model, appl
 
 This framework is **engine‑agnostic at its core**.
 
-The only engine‑specific dependency is the base type constraint on `TMachineType`, which is wrapped in conditional compilation:
+The only engine‑specific dependency is the base type constraint on `TMachineType`, wrapped in conditional compilation:
 
 ```csharp
 #if UNITY_5_3_OR_NEWER
@@ -40,30 +40,51 @@ The FSM, command buffer, and Actor/Controller abstractions are **pure C#** and r
 
 ## 🚀 Core Concepts
 
-### 🧩 Actor  
-An Actor is a state‑driven gameplay entity. It receives commands from Controllers and executes them through its FSM.
+### 🧩 Actor — Deterministic Execution Layer  
+Actors **never decide** what to do.  
+They only execute commands routed to them.
 
 Actors:
 - Own the FSM  
 - Process commands deterministically  
+- Route commands to the current state  
+- Emit Inform events back to Controllers  
 - Expose a single entry point:
 
 ```csharp
 ExecuteCommand<T>(command, parameter)
 ```
 
-### 🎛️ Controller  
-A Controller decides what the Actor should do.
+This aligns with the `IActor<TCommand>` interface:
 
-Examples:
-- Player input controller  
-- AI controller  
-- Network controller  
-- Scripted/cutscene controller  
+> Actors do not decide what to do.  
+> Actors only execute commands deterministically.
 
-Controllers send commands immediately, but Actors process them later.
+---
 
-### 📬 Command Buffer  
+### 🎛️ Controller — Decision Layer  
+Controllers decide what the Actor should do.
+
+A Controller can be implemented using **any decision‑making paradigm**:
+
+- **Player Input Controller**  
+- **Behavior Tree (B3) Controller**  
+- **Utility AI Controller**  
+- **FSM‑Driven Controller**  
+- **Network Controller**  
+- **Scripted / Cutscene Controller**  
+- **Replay / Ghost Controller**  
+- **Tooling / Editor Controller**
+
+Controllers:
+- Decide what the Actor should do  
+- Send typed commands  
+- React to Actor events via `Inform()`  
+- Never mutate Actor state directly  
+
+---
+
+### 📬 Command Buffer — Deterministic Scheduling  
 A FIFO queue that stores commands until the Actor’s update tick.
 
 This ensures:
@@ -79,7 +100,7 @@ This ensures:
 ```
 ┌───────────────────────────┐
 │        Controller         │
-│  (AI / Player / Network)  │
+│ (Input / AI / Network…)   │
 └───────────────┬───────────┘
                 │ ExecuteCommand(cmd, param)
                 ▼
@@ -102,63 +123,37 @@ This ensures:
 
 Your architecture is conceptually aligned with Unreal’s:
 
-### ✔ 1. Decision vs Execution  
+### ✔ Decision vs Execution  
 Unreal: Controller decides → Pawn executes  
 XFG: Controller decides → Actor executes  
 
-### ✔ 2. Possession‑like Behavior  
+### ✔ Possession‑like Behavior  
 Unreal Controllers possess Pawns  
 XFG Controllers attach to Actors  
 
-### ✔ 3. Commands Instead of Direct Manipulation  
+### ✔ Commands Instead of Direct Manipulation  
 Unreal Controllers issue movement/intent  
 XFG Controllers issue typed commands  
 
-### ✔ 4. Inform ≈ Unreal Events/Delegates  
+### ✔ Inform ≈ Unreal Events/Delegates  
 Unreal: OnLanded, OnJumped, OnTakeDamage  
 XFG: Inform(PlayerInform.Landed)  
 
-### ✔ 5. Clean Decoupling  
+### ✔ Clean Decoupling  
 Both enforce:
 - Controller never mutates state directly  
 - Actor never makes decisions  
 - Communication is explicit and directional  
 
-This makes the system familiar to Unreal developers while remaining deterministic, engine‑agnostic, and C#‑friendly.
-
 ---
 
 # 🎨 Actor ↔ Controller Inform Design Overview
 
-This diagram shows the **full communication loop** between Controller, Actor, and Actor States.
-
 ```
-                   ┌───────────────────────────────┐
-                   │          CONTROLLER           │
-                   │  (Player, AI, Network, etc.)  │
-                   └───────────────┬───────────────┘
-                                   │
-                                   │ ExecuteCommand(cmd, param)
-                                   ▼
-                   ┌───────────────────────────────┐
-                   │             ACTOR             │
-                   │  - Command Buffer             │
-                   │  - FSM (StateMachine)         │
-                   └───────────────┬───────────────┘
-                                   │
-                                   │ Routes command to current state
-                                   ▼
-                   ┌───────────────────────────────┐
-                   │          ACTOR STATE          │
-                   │  (IActorState<TCommand>)      │
-                   └───────────────┬───────────────┘
-                                   │
-                                   │ Inform(info, args)
-                                   ▼
-                   ┌───────────────────────────────┐
-                   │          CONTROLLER           │
-                   │  Reacts to Actor events       │
-                   └───────────────────────────────┘
+Controller ──► ExecuteCommand(cmd)
+     ▲                          │
+     │                          ▼
+Inform(info) ◄── State ◄── Actor (FSM + Buffer)
 ```
 
 ### Flow Summary
@@ -168,8 +163,6 @@ This diagram shows the **full communication loop** between Controller, Actor, an
 3. **State executes** → performs logic  
 4. **State informs Controller** → Controller reacts  
 5. **Controller may issue new commands** → loop continues  
-
-This creates a clean, deterministic, testable gameplay loop.
 
 ---
 
@@ -252,7 +245,6 @@ public class PlayerInputController : IController<PlayerInform>
 
     public void TickInput()
     {
-        // Engine-agnostic pseudo-input
         if (InputSystem.JumpPressed)
             _actor.ExecuteCommand(PlayerCommand.Jump, null);
 
@@ -315,8 +307,9 @@ public class PlayerActorSerialized
 - Interrupt commands  
 - Network timestamps  
 - Possession manager  
-- AI planners  
+- AI planners (B3, Utility AI, FSM)  
 - Cutscene controllers  
+- Replay/ghost controllers  
 
 ---
 
