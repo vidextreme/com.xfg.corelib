@@ -1,76 +1,20 @@
-# 🎮 **XFG Actor–Controller Architecture**
-### A deterministic, engine‑agnostic gameplay framework  
-Built for Unity, Godot, MonoGame, and custom engines.
+# 🎮 Actor–Controller Architecture with Command Buffer
 
-- Clear separation of **decision** (Controller) and **execution** (Actor)  
-- Deterministic **command buffer**  
-- Strongly‑typed **FSM**  
-- Engine‑agnostic core with conditional compilation  
-- Supports **player input**, **AI**, **networking**, **cutscenes**, **tools**  
-- Inspired by Unreal’s Actor–Controller model, adapted for C#
+A lightweight, deterministic, and extensible Actor–Controller framework for Unity, Godot, MonoGame, and custom engines.  
+Designed for gameplay systems that require clean separation between **decision‑making** (Controllers) and **execution** (Actors), with support for **AI**, **player input**, **network commands**, and **editor‑authored FSM states**.
+
+This module is part of the **XFG Simple Game Core Library**, a collection of engine‑agnostic C# systems for building reliable, deterministic gameplay foundations.
+
+The architecture is inspired by Unreal Engine’s Actor–Controller model, applying the same clean separation of responsibilities while adding a deterministic command buffer and a strongly‑typed FSM tailored for C#‑based engines.
 
 ---
 
-# 🧩 **What This Architecture Represents**
-This architecture is built around a strict separation of responsibilities that produces predictable, deterministic, and maintainable gameplay behavior.
+## 🌐 Engine‑Agnostic Design
 
-### Core principles:
-- **Controllers decide** what should happen  
-- **Actors execute** those decisions through a state machine  
-- **States encapsulate behavior** and transitions  
-- **Inform() provides feedback** from Actor → Controller  
-- **Command buffer ensures determinism** and prevents mid‑frame state changes  
+This framework is **engine‑agnostic at its core**.
 
-### Why it matters:
-- Predictable behavior across platforms  
-- Clean layering for large‑scale gameplay systems  
-- Easy to test, debug, and extend  
-- Works identically for AI, player input, network commands, and tools  
+The only engine‑specific dependency is the base type constraint on `TMachineType`, which is wrapped in conditional compilation:
 
----
-
-# 🏛️ **Inspiration from Unreal Engine**
-This design draws directly from Unreal Engine’s proven Actor–Controller pattern:
-
-### Unreal’s philosophy:
-- Controller = **intent + decision layer**  
-- Pawn/Character = **execution layer**  
-- Controllers issue **commands**, not direct state changes  
-- Pawns emit **events** back to Controllers  
-- Controllers can be swapped (AI, player, network)  
-
-### XFG adaptation:
-- Strongly‑typed commands  
-- Deterministic command buffer  
-- Lightweight, engine‑agnostic FSM  
-- Serializable polymorphic states (Unity)  
-- Clean Inform() callback channel  
-
-You preserve Unreal’s strengths while making the model portable, explicit, deterministic, and C#‑friendly.
-
----
-
-# ⚖️ **Unreal Engine vs XFG Architecture**
-
-| Concept / Behavior | Unreal Engine | XFG Actor–Controller Architecture |
-|--------------------|---------------|----------------------------------|
-| **Decision Layer** | Controller (PlayerController, AIController) | Controller (PlayerInputController, AIController, NetworkController) |
-| **Execution Layer** | Pawn / Character | Actor (FSM‑driven entity) |
-| **How Decisions Are Sent** | Input events, movement functions, ability triggers | Typed commands via `ExecuteCommand(cmd, param)` |
-| **How Execution Happens** | Pawn processes input, CharacterMovement, components | Actor processes commands through FSM + command buffer |
-| **Feedback to Controller** | Delegates, events (OnLanded, OnJumped, etc.) | `Inform(info, args)` callback |
-| **Possession Model** | Controller possesses Pawn | Controller attaches to Actor |
-| **State Management** | State Trees, Behavior Trees, components | Strongly‑typed FSM with polymorphic states |
-| **Determinism** | Not guaranteed | Guaranteed via command buffer + FSM |
-| **Engine Dependency** | Unreal‑specific | Engine‑agnostic (Unity, Godot, MonoGame, custom engines) |
-| **Serialization** | Blueprint, UObjects | `SerializeReference` polymorphic states (Unity) |
-
----
-
-# 🌐 **Engine‑Agnostic Design**
-The architecture is intentionally portable and avoids engine‑specific APIs.
-
-### Conditional compilation:
 ```csharp
 #if UNITY_5_3_OR_NEWER
     where TMachineType : MonoBehaviour
@@ -83,136 +27,166 @@ The architecture is intentionally portable and avoids engine‑specific APIs.
 #endif
 ```
 
-### Benefits:
-- Same core logic runs in Unity, Godot, MonoGame, or custom engines  
-- FSM, command buffer, and Actor/Controller abstractions are **pure C#**  
-- Only the base type constraint changes per engine  
+This allows the same Actor–Controller architecture to run in:
 
-This makes the system ideal for cross‑engine prototyping or long‑term engine migration.
+- **Unity**
+- **Godot**
+- **MonoGame**
+- **Custom engines**
 
----
-
-# 🧠 **Core Concepts**
-
-### **Actor**
-- Owns the FSM  
-- Executes commands deterministically  
-- Processes buffered input  
-- Emits Inform events back to Controller  
-- Defines per‑state behavior through polymorphic state classes  
-
-### **Controller**
-- Decides what the Actor should do  
-- Sends typed commands  
-- Reacts to Actor events via `Inform()`  
-- Never mutates Actor state directly  
-- Can be swapped (AI, player, network, scripted)  
-
-### **Command Buffer**
-- FIFO  
-- Prevents mid‑frame state changes  
-- Ensures deterministic behavior  
-- Makes AI, player, and network input behave identically  
+The FSM, command buffer, and Actor/Controller abstractions are **pure C#** and require no engine APIs.
 
 ---
 
-# 🏗️ **Architecture Overview**
+## 🚀 Core Concepts
+
+### 🧩 Actor  
+An Actor is a state‑driven gameplay entity. It receives commands from Controllers and executes them through its FSM.
+
+Actors:
+- Own the FSM  
+- Process commands deterministically  
+- Expose a single entry point:
+
+```csharp
+ExecuteCommand<T>(command, parameter)
+```
+
+### 🎛️ Controller  
+A Controller decides what the Actor should do.
+
+Examples:
+- Player input controller  
+- AI controller  
+- Network controller  
+- Scripted/cutscene controller  
+
+Controllers send commands immediately, but Actors process them later.
+
+### 📬 Command Buffer  
+A FIFO queue that stores commands until the Actor’s update tick.
+
+This ensures:
+- No mid‑frame state changes  
+- Deterministic behavior  
+- Identical behavior for AI, player, and network controllers  
+- Clean decoupling between decision and execution  
+
+---
+
+## 🧱 Architecture Overview
 
 ```
 ┌───────────────────────────┐
 │        Controller         │
 │  (AI / Player / Network)  │
 └───────────────┬───────────┘
-                │ ExecuteCommand()
+                │ ExecuteCommand(cmd, param)
                 ▼
 ┌───────────────────────────┐
 │           Actor           │
 │  - Command Buffer         │
 │  - FSM (StateMachine)     │
 └───────────────┬───────────┘
-                │ Routes command
+                │ Routes command to current state
                 ▼
-┌────────────────────────────┐
-│        Actor State         │
-│   (IActorState<TCommand>)  │
-└────────────────────────────┘
+┌───────────────────────────┐
+│        Actor State        │
+│   (IActorState<TCommand>) │
+└───────────────────────────┘
 ```
 
 ---
 
-# 🔁 **Actor ↔ Controller Inform Loop**
+## 🧠 Similarities to Unreal Engine’s Actor–Controller Model
 
-```
-Controller ──► ExecuteCommand(cmd)
-     ▲                          │
-     │                          ▼
-Inform(info) ◄── State ◄── Actor (FSM + Buffer)
-```
+Your architecture is conceptually aligned with Unreal’s:
 
-### Flow:
-1. Controller decides → sends command  
-2. Actor buffers → processes deterministically  
-3. State executes logic  
-4. State informs Controller  
-5. Controller reacts → may issue new commands  
+### ✔ 1. Decision vs Execution  
+Unreal: Controller decides → Pawn executes  
+XFG: Controller decides → Actor executes  
 
-This creates a clean, deterministic gameplay loop.
+### ✔ 2. Possession‑like Behavior  
+Unreal Controllers possess Pawns  
+XFG Controllers attach to Actors  
+
+### ✔ 3. Commands Instead of Direct Manipulation  
+Unreal Controllers issue movement/intent  
+XFG Controllers issue typed commands  
+
+### ✔ 4. Inform ≈ Unreal Events/Delegates  
+Unreal: OnLanded, OnJumped, OnTakeDamage  
+XFG: Inform(PlayerInform.Landed)  
+
+### ✔ 5. Clean Decoupling  
+Both enforce:
+- Controller never mutates state directly  
+- Actor never makes decisions  
+- Communication is explicit and directional  
+
+This makes the system familiar to Unreal developers while remaining deterministic, engine‑agnostic, and C#‑friendly.
 
 ---
 
-# 🧱 **Serialized State Machines (Unity)**
-For designer‑friendly workflows, the architecture supports a fully serialized FSM.
+# 🎨 Actor ↔ Controller Inform Design Overview
 
-### Features:
-- Uses `SerializeReference` for polymorphic states  
-- States can be reordered, edited, and configured in the Inspector  
-- No need to declare your own `States[]` — inherited automatically  
-- Perfect for designers, technical artists, and rapid iteration  
+This diagram shows the **full communication loop** between Controller, Actor, and Actor States.
+
+```
+                   ┌───────────────────────────────┐
+                   │          CONTROLLER           │
+                   │  (Player, AI, Network, etc.)  │
+                   └───────────────┬───────────────┘
+                                   │
+                                   │ ExecuteCommand(cmd, param)
+                                   ▼
+                   ┌───────────────────────────────┐
+                   │             ACTOR             │
+                   │  - Command Buffer             │
+                   │  - FSM (StateMachine)         │
+                   └───────────────┬───────────────┘
+                                   │
+                                   │ Routes command to current state
+                                   ▼
+                   ┌───────────────────────────────┐
+                   │          ACTOR STATE          │
+                   │  (IActorState<TCommand>)      │
+                   └───────────────┬───────────────┘
+                                   │
+                                   │ Inform(info, args)
+                                   ▼
+                   ┌───────────────────────────────┐
+                   │          CONTROLLER           │
+                   │  Reacts to Actor events       │
+                   └───────────────────────────────┘
+```
+
+### Flow Summary
+
+1. **Controller decides** → sends command  
+2. **Actor buffers** → processes deterministically  
+3. **State executes** → performs logic  
+4. **State informs Controller** → Controller reacts  
+5. **Controller may issue new commands** → loop continues  
+
+This creates a clean, deterministic, testable gameplay loop.
+
+---
+
+# 🧩 Implementing an Actor (Full Example)
+
+### 1. Define State IDs, Messages, Commands, Inform Types
 
 ```csharp
-public class PlayerActorSerialized 
-    : ActorSerializableStateMachine<
-        PlayerActorSerialized,
-        PlayerStateID,
-        PlayerCommand,
-        PlayerMessage>
-{
-    // States[] is inherited.
-}
+public enum PlayerStateID { Idle, Moving, Jumping }
+public enum PlayerMessage { None }
+public enum PlayerCommand { Move, Jump }
+public enum PlayerInform { Jumped, Landed, TookDamage }
 ```
 
 ---
 
-# 🎮 **Player Input Controller Example**
-
-```csharp
-public class PlayerInputController : IController<PlayerInform>
-{
-    private readonly PlayerActor _actor;
-
-    public void TickInput()
-    {
-        if (InputSystem.JumpPressed)
-            _actor.ExecuteCommand(PlayerCommand.Jump, null);
-
-        if (InputSystem.MoveLeftHeld)
-            _actor.ExecuteCommand(PlayerCommand.Move, Vector2.left);
-
-        if (InputSystem.MoveRightHeld)
-            _actor.ExecuteCommand(PlayerCommand.Move, Vector2.right);
-    }
-
-    public void Inform(PlayerInform info, params object[] args)
-    {
-        if (info == PlayerInform.Jumped)
-            Logger.Log("Player jumped");
-    }
-}
-```
-
----
-
-# 🧱 **Actor Example**
+### 2. Implement the Actor
 
 ```csharp
 public class PlayerActor 
@@ -234,21 +208,119 @@ public class PlayerActor
     protected override void Update()
     {
         _controller.TickInput();   // Controller decides
-        base.Update();             // Actor executes
+        base.Update();             // Actor executes (FSM + command buffer)
     }
 }
 ```
 
 ---
 
-# ⭐ **Benefits**
+### 3. Implement States
 
-- Deterministic gameplay  
-- Clean, testable architecture  
-- Engine‑agnostic core  
-- Supports designer‑authored serialized FSMs  
-- Scales to AI, networking, cutscenes, tools  
-- Familiar to Unreal developers, but simpler and more explicit  
-- Ideal for long‑term maintainability and cross‑engine portability  
+```csharp
+public class PlayerIdleState 
+    : IActorState<PlayerCommand>, IState<PlayerActor, PlayerStateID, PlayerMessage>
+{
+    public void OnEnter(PlayerActor actor) { }
+    public void OnExit(PlayerActor actor) { }
+    public void OnUpdate(PlayerActor actor, float dt) { }
+
+    public void ExecuteCommand<T>(PlayerCommand cmd, T param)
+    {
+        if (cmd == PlayerCommand.Move)
+            actor.ChangeState(PlayerStateID.Moving);
+
+        if (cmd == PlayerCommand.Jump)
+            actor.ChangeState(PlayerStateID.Jumping);
+    }
+}
+```
 
 ---
+
+# 🕹️ Implementing a Player Input Controller (IController Example)
+
+```csharp
+public class PlayerInputController : IController<PlayerInform>
+{
+    private readonly PlayerActor _actor;
+
+    public PlayerInputController(PlayerActor actor)
+    {
+        _actor = actor;
+    }
+
+    public void TickInput()
+    {
+        // Engine-agnostic pseudo-input
+        if (InputSystem.JumpPressed)
+            _actor.ExecuteCommand(PlayerCommand.Jump, null);
+
+        if (InputSystem.MoveLeftHeld)
+            _actor.ExecuteCommand(PlayerCommand.Move, Vector2.left);
+
+        if (InputSystem.MoveRightHeld)
+            _actor.ExecuteCommand(PlayerCommand.Move, Vector2.right);
+    }
+
+    public void Inform(PlayerInform info, params object[] args)
+    {
+        switch (info)
+        {
+            case PlayerInform.Jumped:
+                Logger.Log("Player jumped");
+                break;
+
+            case PlayerInform.Landed:
+                Logger.Log("Player landed");
+                break;
+
+            case PlayerInform.TookDamage:
+                int amount = (int)args[0];
+                Logger.Log($"Player took {amount} damage");
+                break;
+        }
+    }
+}
+```
+
+---
+
+# 🧩 Using the Serialized Version (Unity Editor Workflow)
+
+If you want designers to configure states visually:
+
+- Use `ActorSerializableStateMachine<>`
+- States become Unity‑serializable via `SerializeReference`
+- You can assign, reorder, and edit states directly in the Inspector
+- **No need to declare your own `States` array — it is inherited**
+
+```csharp
+public class PlayerActorSerialized 
+    : ActorSerializableStateMachine<
+        PlayerActorSerialized,
+        PlayerStateID,
+        PlayerCommand,
+        PlayerMessage>
+{
+    // States[] is inherited.
+}
+```
+
+---
+
+## 🛠 Extending the System
+
+- Priority command buffers  
+- Interrupt commands  
+- Network timestamps  
+- Possession manager  
+- AI planners  
+- Cutscene controllers  
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.  
+See the `LICENSE` file for details.

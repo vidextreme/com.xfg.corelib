@@ -5,6 +5,7 @@ Built for Unity, Godot, MonoGame, and custom engines.
 - Clear separation of **decision** (Controller) and **execution** (Actor)  
 - Deterministic **command buffer**  
 - Strongly‑typed **FSM**  
+- Engine‑agnostic core with conditional compilation  
 - Supports **player input**, **AI**, **networking**, **cutscenes**, **tools**  
 - Inspired by Unreal’s Actor–Controller model, adapted for C#
 
@@ -13,32 +14,39 @@ Built for Unity, Godot, MonoGame, and custom engines.
 # 🧩 **What This Architecture Represents**
 This architecture is built around a strict separation of responsibilities that produces predictable, deterministic, and maintainable gameplay behavior.
 
+### Core principles:
 - **Controllers decide** what should happen  
 - **Actors execute** those decisions through a state machine  
 - **States encapsulate behavior** and transitions  
 - **Inform() provides feedback** from Actor → Controller  
+- **Command buffer ensures determinism** and prevents mid‑frame state changes  
 
-This creates a clean, extensible loop suitable for gameplay, AI, networking, and tools.
+### Why it matters:
+- Predictable behavior across platforms  
+- Clean layering for large‑scale gameplay systems  
+- Easy to test, debug, and extend  
+- Works identically for AI, player input, network commands, and tools  
 
 ---
 
 # 🏛️ **Inspiration from Unreal Engine**
 This design draws directly from Unreal Engine’s proven Actor–Controller pattern:
 
-- Unreal separates **Controller** (intent, input, AI) from **Pawn/Character** (movement, abilities).  
-- Controllers issue **commands or input events**, not direct state changes.  
-- Pawns emit **events** back to Controllers (OnLanded, OnJumped, etc.).  
-- Controllers can be swapped (AI, player, network) without modifying the Pawn.  
+### Unreal’s philosophy:
+- Controller = **intent + decision layer**  
+- Pawn/Character = **execution layer**  
+- Controllers issue **commands**, not direct state changes  
+- Pawns emit **events** back to Controllers  
+- Controllers can be swapped (AI, player, network)  
 
-Your architecture adapts these principles to C# engines with:
-
+### XFG adaptation:
 - Strongly‑typed commands  
-- A deterministic command buffer  
-- A lightweight, engine‑agnostic FSM  
+- Deterministic command buffer  
+- Lightweight, engine‑agnostic FSM  
 - Serializable polymorphic states (Unity)  
-- A clean Inform() callback channel  
+- Clean Inform() callback channel  
 
-It preserves Unreal’s strengths while making the model portable, explicit, and deterministic.
+You preserve Unreal’s strengths while making the model portable, explicit, deterministic, and C#‑friendly.
 
 ---
 
@@ -54,8 +62,33 @@ It preserves Unreal’s strengths while making the model portable, explicit, and
 | **Possession Model** | Controller possesses Pawn | Controller attaches to Actor |
 | **State Management** | State Trees, Behavior Trees, components | Strongly‑typed FSM with polymorphic states |
 | **Determinism** | Not guaranteed | Guaranteed via command buffer + FSM |
-| **Engine Dependency** | Unreal‑specific | Engine‑agnostic |
+| **Engine Dependency** | Unreal‑specific | Engine‑agnostic (Unity, Godot, MonoGame, custom engines) |
 | **Serialization** | Blueprint, UObjects | `SerializeReference` polymorphic states (Unity) |
+
+---
+
+# 🌐 **Engine‑Agnostic Design**
+The architecture is intentionally portable and avoids engine‑specific APIs.
+
+### Conditional compilation:
+```csharp
+#if UNITY_5_3_OR_NEWER
+    where TMachineType : MonoBehaviour
+#elif GODOT
+    where TMachineType : Godot.Node
+#elif MONOGAME
+    where TMachineType : Microsoft.Xna.Framework.GameComponent
+#else
+    where TMachineType : class
+#endif
+```
+
+### Benefits:
+- Same core logic runs in Unity, Godot, MonoGame, or custom engines  
+- FSM, command buffer, and Actor/Controller abstractions are **pure C#**  
+- Only the base type constraint changes per engine  
+
+This makes the system ideal for cross‑engine prototyping or long‑term engine migration.
 
 ---
 
@@ -66,40 +99,43 @@ It preserves Unreal’s strengths while making the model portable, explicit, and
 - Executes commands deterministically  
 - Processes buffered input  
 - Emits Inform events back to Controller  
+- Defines per‑state behavior through polymorphic state classes  
 
 ### **Controller**
 - Decides what the Actor should do  
 - Sends typed commands  
 - Reacts to Actor events via `Inform()`  
 - Never mutates Actor state directly  
+- Can be swapped (AI, player, network, scripted)  
 
 ### **Command Buffer**
 - FIFO  
 - Prevents mid‑frame state changes  
-- Ensures deterministic behavior across all controllers  
+- Ensures deterministic behavior  
+- Makes AI, player, and network input behave identically  
 
 ---
 
 # 🏗️ **Architecture Overview**
 
 ```
-┌──────────────────────────┐
+┌───────────────────────────┐
 │        Controller         │
 │  (AI / Player / Network)  │
-└───────────────┬──────────┘
+└───────────────┬───────────┘
                 │ ExecuteCommand()
                 ▼
-┌──────────────────────────┐
+┌───────────────────────────┐
 │           Actor           │
 │  - Command Buffer         │
 │  - FSM (StateMachine)     │
-└───────────────┬──────────┘
+└───────────────┬───────────┘
                 │ Routes command
                 ▼
-┌──────────────────────────┐
-│        Actor State        │
-│   (IActorState<TCommand>) │
-└──────────────────────────┘
+┌────────────────────────────┐
+│        Actor State         │
+│   (IActorState<TCommand>)  │
+└────────────────────────────┘
 ```
 
 ---
@@ -113,12 +149,37 @@ Controller ──► ExecuteCommand(cmd)
 Inform(info) ◄── State ◄── Actor (FSM + Buffer)
 ```
 
-### **Flow**
+### Flow:
 1. Controller decides → sends command  
 2. Actor buffers → processes deterministically  
 3. State executes logic  
 4. State informs Controller  
 5. Controller reacts → may issue new commands  
+
+This creates a clean, deterministic gameplay loop.
+
+---
+
+# 🧱 **Serialized State Machines (Unity)**
+For designer‑friendly workflows, the architecture supports a fully serialized FSM.
+
+### Features:
+- Uses `SerializeReference` for polymorphic states  
+- States can be reordered, edited, and configured in the Inspector  
+- No need to declare your own `States[]` — inherited automatically  
+- Perfect for designers, technical artists, and rapid iteration  
+
+```csharp
+public class PlayerActorSerialized 
+    : ActorSerializableStateMachine<
+        PlayerActorSerialized,
+        PlayerStateID,
+        PlayerCommand,
+        PlayerMessage>
+{
+    // States[] is inherited.
+}
+```
 
 ---
 
@@ -188,5 +249,6 @@ public class PlayerActor
 - Supports designer‑authored serialized FSMs  
 - Scales to AI, networking, cutscenes, tools  
 - Familiar to Unreal developers, but simpler and more explicit  
+- Ideal for long‑term maintainability and cross‑engine portability  
 
 ---
