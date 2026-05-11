@@ -28,7 +28,11 @@ public static class ManagedReferenceUtility
         if (field == null)
             return null;
 
-        return field.FieldType;
+        Type t = field.FieldType;
+        if (t.IsArray)
+            return t.GetElementType();
+
+        return t;
     }
 
     static FieldInfo GetFieldInfoFromPropertyPath(Type host, string path)
@@ -78,10 +82,7 @@ public static class ManagedReferenceUtility
             })
             .Where(t =>
                 t != null &&
-                baseType.IsAssignableFrom(t) &&
-                !t.IsAbstract &&
-                !t.IsInterface &&
-                t.GetConstructor(Type.EmptyTypes) != null)
+                baseType.IsAssignableFrom(t) )
             .OrderBy(t => t.FullName);
     }
 

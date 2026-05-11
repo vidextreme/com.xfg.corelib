@@ -1,7 +1,5 @@
-// ------------------------------------------------------------------------------
 // Copyright (c) 2026 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
-// ------------------------------------------------------------------------------
 //
 // ISerializableStateMachine
 //
@@ -21,7 +19,6 @@
 // - Machine must register all states before the first ChangeState call
 //
 // This implementation satisfies all requirements.
-// ------------------------------------------------------------------------------
 
 using UnityEngine;
 using System;
@@ -47,7 +44,7 @@ namespace XFG.AI.FSM.Serializable
         // - HFSM parent/child relationships can be defined inside state classes
         // ----------------------------------------------------------------------
 
-        [SerializeReference]
+        [SerializeReference, Core.SerializableClass]
         public TState[] States;
 
         // ----------------------------------------------------------------------

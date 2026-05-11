@@ -7,12 +7,15 @@
 // reference inline using PropertyField (no foldout, no labels).
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.IMGUI.Controls;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static XFG.Core;
+
 
 [CustomPropertyDrawer(typeof(SerializableClassAttribute))]
 public class SerializableClassDrawer : PropertyDrawer
@@ -33,8 +36,10 @@ public class SerializableClassDrawer : PropertyDrawer
             attr.BaseType ??
             ManagedReferenceUtility.GetFieldDeclaredType(property);
 
+        TypeCache.GetTypesDerivedFrom(declaredType).ToList();
         var assignable = ManagedReferenceUtility
             .GetAssignableConcreteTypes(declaredType)
+            .Where(t => !t.IsAbstract)
             .ToList();
 
         var button = new Button();
