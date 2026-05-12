@@ -4,7 +4,7 @@
 using XFG.ActorController;
 ``` 
 
-![xfg actor-controller](Docs/actor-controller.png)
+![actorcontroller](actor-controller.png)
 
 A lightweight, deterministic, and extensible Actor–Controller framework for Unity, Godot, MonoGame, and custom engines.  
 Designed for gameplay systems that require clean separation between **decision‑making** (Controllers) and **execution** (Actors), with support for **AI**, **player input**, **network commands**, **cutscenes**, **tools**, and **designer‑authored FSM states**.
