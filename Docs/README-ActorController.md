@@ -1,4 +1,4 @@
-# 🎮 Actor–Controller Architecture with Command Buffer
+# 🎮 Actor–Controller Framework with Command Buffer
 
 A lightweight, deterministic, and extensible Actor–Controller framework for Unity, Godot, MonoGame, and custom engines.  
 Designed for gameplay systems that require clean separation between **decision‑making** (Controllers) and **execution** (Actors), with support for **AI**, **player input**, **network commands**, **cutscenes**, **tools**, and **designer‑authored FSM states**.

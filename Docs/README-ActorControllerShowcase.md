@@ -1,4 +1,4 @@
-# 🎮 **XFG Actor–Controller Architecture**
+# 🎮 **XFG Actor–Controller Framework**
 ### A deterministic, engine‑agnostic gameplay framework  
 Built for Unity, Godot, MonoGame, and custom engines.
 
