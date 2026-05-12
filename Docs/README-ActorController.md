@@ -9,6 +9,44 @@ The architecture is inspired by Unreal Engine’s Actor–Controller model, appl
 
 ---
 
+## 🏛️ **Inspiration from Unreal Engine**
+This design draws directly from Unreal Engine’s proven Actor–Controller pattern:
+
+### Unreal’s philosophy:
+- Controller = **intent + decision layer**  
+- Pawn/Character = **execution layer**  
+- Controllers issue **commands**, not direct state changes  
+- Pawns emit **events** back to Controllers  
+- Controllers can be swapped (AI, player, network)  
+
+### XFG adaptation:
+- Strongly‑typed commands  
+- Deterministic command buffer  
+- Lightweight, engine‑agnostic FSM  
+- Serializable polymorphic states (Unity)  
+- Clean Inform() callback channel  
+
+You preserve Unreal’s strengths while making the model portable, explicit, deterministic, and C#‑friendly.
+
+---
+
+## ⚖️ **Unreal Engine vs XFG Architecture**
+
+| Concept / Behavior | Unreal Engine | XFG Actor–Controller Architecture |
+|--------------------|---------------|----------------------------------|
+| **Decision Layer** | Controller (PlayerController, AIController) | Controller (Input, AI, B3, Utility AI, FSM, Network, Replay) |
+| **Execution Layer** | Pawn / Character | Actor (FSM‑driven entity) |
+| **How Decisions Are Sent** | Input events, movement functions, ability triggers | Typed commands via `ExecuteCommand(cmd, param)` |
+| **How Execution Happens** | Pawn processes input, CharacterMovement, components | Actor processes commands through FSM + command buffer |
+| **Feedback to Controller** | Delegates, events | `Inform(info, args)` callback |
+| **Possession Model** | Controller possesses Pawn | Controller attaches to Actor |
+| **State Management** | State Trees, Behavior Trees | Strongly‑typed FSM with polymorphic states |
+| **Determinism** | Not guaranteed | Guaranteed via command buffer + FSM |
+| **Engine Dependency** | Unreal‑specific | Engine‑agnostic |
+| **Serialization** | Blueprint, UObjects | `SerializeReference` polymorphic states (Unity) |
+
+---
+
 ## 🌐 Engine‑Agnostic Design
 
 This framework is **engine‑agnostic at its core**.
