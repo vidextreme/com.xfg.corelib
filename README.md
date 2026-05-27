@@ -13,6 +13,7 @@ Built for clarity, determinism, and extensibility, with optional Unity/Burst lay
 - [🧠 StateMachine System](#-statemachine-system)
 - [🧠 Utility AI System](#-utility-ai-system)
 - [🎮 Actor–Controller Architecture](#-actorcontroller-architecture)
+- [🏗️ TriScope Runtime System](#-triscope-runtime-system)
 - [📐 Geometry & Math Utilities](#-geometry--math-utilities)
 - [📦 Installation](#-installation)
 - [🗺️ Roadmap](#-roadmap)
@@ -164,6 +165,50 @@ Inspired by Unreal Engine’s Actor–Controller model, adapted for explicit, po
 - Familiar to Unreal developers but simpler and engine-agnostic
 
 [Actor–Controller Readme](Docs/README-ActorController.md)
+
+---
+
+### 🏗️ TriScope Runtime System
+
+A deterministic, scope-driven runtime architecture built around three explicit execution layers:  
+**Engine Scope**, **Group Scope**, and **World Scope**.  
+TriScope provides a clean, modular foundation for simulation, tools, and multi-world workflows.
+
+Designed for clarity, testability, and engine-agnostic portability.
+
+#### Core Concepts
+
+- **Engine Scope**
+  - Global, process-level systems (logging, time, global services)
+  - Created once per application
+  - No per-session or per-world state
+
+- **Group Scope**
+  - Session-level systems (match, run, dungeon, simulation session)
+  - Owns one or more Worlds
+  - Ideal for multiplayer sessions, multi-run roguelikes, or editor preview sessions
+
+- **World Scope**
+  - Per-world simulation state
+  - Contains systems, components, and runtime data
+  - Fully isolated for deterministic multi-world execution
+
+#### Runtime Features
+- Deterministic startup order via StartupOrder
+- Explicit dependency injection via DependencyContext
+- Modular subsystem registration per scope
+- Engine-agnostic Tick loop with stable timing
+- Supports multi-world simulation (parallel or sequential)
+- Built-in Runtime Viewer for live inspection and debugging
+- Eliminates hidden singletons, scattered managers, and engine-tangled lifecycles
+
+#### Benefits
+- Predictable, testable runtime behavior
+- Clear separation of global, session, and world responsibilities
+- Scales from small prototypes to large multi-world simulations
+- Works with Unity, Godot, MonoGame, or pure C#
+
+[TriScope Runtime Readme](Docs/README-TriScope.md)
 
 ---
 
