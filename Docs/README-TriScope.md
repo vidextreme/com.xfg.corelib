@@ -4,6 +4,9 @@
 using XFG.Subsystems;
 ``` 
 
+![triscope](triscope.png)
+
+
 *A deterministic, engine‑agnostic runtime framework for scalable simulation and game systems.*  
 **This module is part of the XFG Simple Game Core Library.**
 
