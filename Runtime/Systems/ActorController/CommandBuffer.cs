@@ -7,21 +7,21 @@ using System.Collections.Generic;
 namespace XFG.ActorController
 {
     /// <summary>
-    /// CommandBuffer
-    ///
-    /// A lightweight, strongly-typed FIFO buffer for Actor commands.
-    /// Controllers enqueue commands immediately, and the Actor processes
-    /// them deterministically during its update cycle.
-    ///
+    /// A lightweight, strongly-typed FIFO buffer for Actor commands. Controllers
+    /// enqueue commands immediately, and the Actor processes them deterministically
+    /// during its update cycle.
+    /// </summary>
+    /// <remarks>
     /// This ensures:
-    /// - Stable, predictable state transitions
-    /// - No mid-frame command execution
-    /// - Identical behavior for AI, player, and network controllers
-    /// - Clean decoupling between decision-making and execution
-    ///
+    /// <list type="bullet">
+    /// <item>Stable, predictable state transitions</item>
+    /// <item>No mid-frame command execution</item>
+    /// <item>Identical behavior for AI, player, and network controllers</item>
+    /// <item>Clean decoupling between decision-making and execution</item>
+    /// </list>
     /// The buffer supports optional capacity limits, peeking, clearing,
     /// and safe dequeue operations.
-    /// </summary>
+    /// </remarks>
     public class CommandBuffer<TCommand, TParam>
         where TCommand : IComparable
     {
@@ -37,6 +37,10 @@ namespace XFG.ActorController
         /// </summary>
         public int Count => _queue.Count;
 
+        /// <summary>
+        /// Creates a new command buffer with an optional capacity limit.
+        /// </summary>
+        /// <param name="capacity">The maximum number of commands, or null for an unbounded buffer.</param>
         public CommandBuffer(int? capacity = null)
         {
             Capacity = capacity;
@@ -47,6 +51,8 @@ namespace XFG.ActorController
         /// Enqueues a command. If capacity is reached, the oldest command
         /// is dropped to maintain buffer size.
         /// </summary>
+        /// <param name="command">The command identifier.</param>
+        /// <param name="parameter">The command payload.</param>
         public void Enqueue(TCommand command, TParam parameter)
         {
             if (Capacity.HasValue && _queue.Count >= Capacity.Value)
@@ -59,8 +65,10 @@ namespace XFG.ActorController
 
         /// <summary>
         /// Attempts to dequeue the next command.
-        /// Returns true if successful.
         /// </summary>
+        /// <param name="command">The dequeued command, or default if the buffer is empty.</param>
+        /// <param name="parameter">The dequeued payload, or default if the buffer is empty.</param>
+        /// <returns>True if a command was dequeued; otherwise, false.</returns>
         public bool TryDequeue(out TCommand command, out TParam parameter)
         {
             if (_queue.Count > 0)
@@ -79,6 +87,9 @@ namespace XFG.ActorController
         /// <summary>
         /// Returns the next command without removing it.
         /// </summary>
+        /// <param name="command">The next command, or default if the buffer is empty.</param>
+        /// <param name="parameter">The next payload, or default if the buffer is empty.</param>
+        /// <returns>True if a command is available; otherwise, false.</returns>
         public bool TryPeek(out TCommand command, out TParam parameter)
         {
             if (_queue.Count > 0)

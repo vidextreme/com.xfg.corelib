@@ -1,10 +1,6 @@
 // Copyright (c) 2026 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
 
-// ------------------------------------------------------------------------------
-// ShapeDebug.Capsule
-// ------------------------------------------------------------------------------
-//
 using UnityEngine;
 
 namespace XFG.Math.Shape
@@ -12,8 +8,12 @@ namespace XFG.Math.Shape
     public static partial class ShapeDebug
     {
         /// <summary>
-        /// Draws a capsule defined by p0, p1, and radius.
+        /// Draws a capsule defined by <paramref name="p0"/>, <paramref name="p1"/>, and <paramref name="radius"/>.
         /// </summary>
+        /// <param name="p0">First endpoint of the capsule axis.</param>
+        /// <param name="p1">Second endpoint of the capsule axis.</param>
+        /// <param name="radius">Capsule radius.</param>
+        /// <param name="color">Line color.</param>
         public static void DrawCapsule(Vector3 p0, Vector3 p1, float radius, Color color)
         {
 #if UNITY_EDITOR

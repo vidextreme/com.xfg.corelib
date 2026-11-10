@@ -1,11 +1,6 @@
 // Copyright (c) 2026 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
 
-// UIElements property drawer for managed reference fields marked with
-// [SerializableClass]. Provides an expanding button with a type icon that
-// opens the hierarchical searchable type popup, and draws the managed
-// reference inline using PropertyField (no foldout, no labels).
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,10 +11,22 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using static XFG.Core;
 
-
+/// <summary>
+/// UIElements property drawer for managed reference fields marked with <see cref="SerializableClassAttribute"/>.
+/// </summary>
+/// <remarks>
+/// Provides an expanding button with a type icon that opens the hierarchical
+/// searchable type popup, and draws the managed reference inline using
+/// <see cref="PropertyField"/> (no foldout, no labels).
+/// </remarks>
 [CustomPropertyDrawer(typeof(SerializableClassAttribute))]
 public class SerializableClassDrawer : PropertyDrawer
 {
+    /// <summary>
+    /// Builds the type-picker button and inline field for the property.
+    /// </summary>
+    /// <param name="property">The managed reference property to draw.</param>
+    /// <returns>The root visual element of the drawer.</returns>
     public override VisualElement CreatePropertyGUI(SerializedProperty property)
     {
         var root = new VisualElement();

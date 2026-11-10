@@ -1,33 +1,35 @@
 // Copyright (c) 2026 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
-// ------------------------------------------------------------------------------
-// TrianglePrimitiveCollision
-// ------------------------------------------------------------------------------
-// Collision predicates and distance helpers for Triangle vs:
-// - Sphere
-// - Capsule
-// - Cylinder
-// - Cone
-// - Line, Ray, Segment
-// - Plane
-// - AABB (Unity Bounds)
-// - OBB
-// - Triangle
-// - Frustum (array of Unity Planes)
-//
-// All methods are deterministic, allocation-free, and suitable for Burst jobs.
-// This module assumes TriangleMath and SegmentMath are available in XFG.Math.
-// ------------------------------------------------------------------------------
 
 using UnityEngine;
 
 namespace XFG.Math.Shape
 {
+    /// <summary>
+    /// Collision predicates and distance helpers for triangles against other shapes.
+    /// </summary>
+    /// <remarks>
+    /// Supported shapes:
+    /// <list type="bullet">
+    /// <item>Sphere</item>
+    /// <item>Capsule</item>
+    /// <item>Cylinder</item>
+    /// <item>Cone</item>
+    /// <item>Line, Ray, Segment</item>
+    /// <item>Plane</item>
+    /// <item>AABB (Unity Bounds)</item>
+    /// <item>OBB</item>
+    /// <item>Triangle</item>
+    /// <item>Frustum (array of Unity Planes)</item>
+    /// </list>
+    /// All methods are deterministic, allocation-free, and suitable for Burst jobs.
+    /// This module assumes TriangleMath and SegmentMath are available in XFG.Math.
+    /// </remarks>
     public static class TrianglePrimitiveCollision
     {
-        // ==============================================================================
-        // INTERNAL HELPERS
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Internal Helpers
+        // ---------------------------------------------------------------------
         #region InternalHelpers
 
         /// <summary>
@@ -85,9 +87,9 @@ namespace XFG.Math.Shape
 
         #endregion
 
-        // ==============================================================================
-        // TRIANGLE vs SPHERE
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Triangle vs Sphere
+        // ---------------------------------------------------------------------
         #region TriangleVsSphere
 
         /// <summary>
@@ -112,9 +114,9 @@ namespace XFG.Math.Shape
 
         #endregion
 
-        // ==============================================================================
-        // TRIANGLE vs CAPSULE
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Triangle vs Capsule
+        // ---------------------------------------------------------------------
         #region TriangleVsCapsule
 
         /// <summary>
@@ -142,9 +144,9 @@ namespace XFG.Math.Shape
 
         #endregion
 
-        // ==============================================================================
-        // TRIANGLE vs CYLINDER
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Triangle vs Cylinder
+        // ---------------------------------------------------------------------
         #region TriangleVsCylinder
 
         /// <summary>
@@ -172,9 +174,9 @@ namespace XFG.Math.Shape
 
         #endregion
 
-        // ==============================================================================
-        // TRIANGLE vs CONE
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Triangle vs Cone
+        // ---------------------------------------------------------------------
         #region TriangleVsCone
 
         /// <summary>
@@ -211,13 +213,13 @@ namespace XFG.Math.Shape
 
         #endregion
 
-        // ==============================================================================
-        // TRIANGLE vs RAY / LINE / SEGMENT
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Triangle vs Ray / Line / Segment
+        // ---------------------------------------------------------------------
         #region TriangleVsRayLineSegment
 
         /// <summary>
-        /// Raycast against triangle using Möller–Trumbore. Returns true if hit.
+        /// Raycast against triangle using Moller-Trumbore. Returns true if hit.
         /// </summary>
         /// <param name="ray">Ray to test.</param>
         /// <param name="a">Triangle vertex A.</param>
@@ -352,9 +354,9 @@ namespace XFG.Math.Shape
 
         #endregion
 
-        // ==============================================================================
-        // TRIANGLE vs PLANE
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Triangle vs Plane
+        // ---------------------------------------------------------------------
         #region TriangleVsPlane
 
         /// <summary>
@@ -400,9 +402,9 @@ namespace XFG.Math.Shape
 
         #endregion
 
-        // ==============================================================================
-        // TRIANGLE vs AABB
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Triangle vs AABB
+        // ---------------------------------------------------------------------
         #region TriangleVsAabb
 
         /// <summary>
@@ -528,9 +530,9 @@ namespace XFG.Math.Shape
 
         #endregion
 
-        // ==============================================================================
-        // TRIANGLE vs OBB
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Triangle vs OBB
+        // ---------------------------------------------------------------------
         #region TriangleVsObb
 
         /// <summary>
@@ -569,9 +571,9 @@ namespace XFG.Math.Shape
 
         #endregion
 
-        // ==============================================================================
-        // TRIANGLE vs TRIANGLE
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Triangle vs Triangle
+        // ---------------------------------------------------------------------
         #region TriangleVsTriangle
 
         /// <summary>
@@ -667,9 +669,9 @@ namespace XFG.Math.Shape
 
         #endregion
 
-        // ==============================================================================
-        // TRIANGLE vs FRUSTUM
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Triangle vs Frustum
+        // ---------------------------------------------------------------------
         #region TriangleVsFrustum
 
         /// <summary>

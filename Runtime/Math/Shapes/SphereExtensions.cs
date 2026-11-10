@@ -1,31 +1,36 @@
 // Copyright (c) 2026 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
-// ------------------------------------------------------------------------------
-// SphereExtensions
-// ------------------------------------------------------------------------------
-// Extension methods for Sphere providing:
-// - Point and shape containment tests
-// - Expansion to include points or other spheres
-// - Sphere merging utilities
-// - Intersection and overlap predicates
-//
-// All methods are deterministic, allocation-free, and suitable for Burst jobs.
-// ------------------------------------------------------------------------------
 
 using UnityEngine;
 
 namespace XFG.Math.Shape
 {
+    /// <summary>
+    /// Containment, expansion and merging extension methods for <see cref="Sphere"/>.
+    /// </summary>
+    /// <remarks>
+    /// Provides:
+    /// <list type="bullet">
+    /// <item>Point and shape containment tests</item>
+    /// <item>Expansion to include points or other spheres</item>
+    /// <item>Sphere merging utilities</item>
+    /// <item>Intersection and overlap predicates</item>
+    /// </list>
+    /// All methods are deterministic, allocation-free, and suitable for Burst jobs.
+    /// </remarks>
     public static class SphereExtensions
     {
-        // ==============================================================================
-        // CONTAINS
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Contains
+        // ---------------------------------------------------------------------
         #region Contains
 
         /// <summary>
         /// Returns true if the sphere contains the point.
         /// </summary>
+        /// <param name="s">The sphere.</param>
+        /// <param name="p">The point to test.</param>
+        /// <returns><c>true</c> if the point is inside or on the sphere.</returns>
         public static bool Contains(this Sphere s, Vector3 p)
         {
             return (p - s.Center).sqrMagnitude <= s.Radius * s.Radius;
@@ -34,6 +39,9 @@ namespace XFG.Math.Shape
         /// <summary>
         /// Returns true if this sphere fully contains another sphere.
         /// </summary>
+        /// <param name="s">The containing sphere.</param>
+        /// <param name="other">The sphere to test.</param>
+        /// <returns><c>true</c> if <paramref name="other"/> is fully inside.</returns>
         public static bool Contains(this Sphere s, Sphere other)
         {
             if (other.Radius > s.Radius)
@@ -46,6 +54,9 @@ namespace XFG.Math.Shape
         /// <summary>
         /// Returns true if the sphere fully contains the capsule.
         /// </summary>
+        /// <param name="s">The containing sphere.</param>
+        /// <param name="c">The capsule to test.</param>
+        /// <returns><c>true</c> if the capsule is fully inside.</returns>
         public static bool Contains(this Sphere s, Capsule c)
         {
             float innerRadius = s.Radius - c.Radius;
@@ -61,6 +72,9 @@ namespace XFG.Math.Shape
         /// <summary>
         /// Returns true if the sphere fully contains the cylinder.
         /// </summary>
+        /// <param name="s">The containing sphere.</param>
+        /// <param name="cy">The cylinder to test.</param>
+        /// <returns><c>true</c> if the cylinder is fully inside (cap centers tested only).</returns>
         public static bool Contains(this Sphere s, Cylinder cy)
         {
             float innerRadius = s.Radius - cy.Radius;
@@ -76,6 +90,9 @@ namespace XFG.Math.Shape
         /// <summary>
         /// Returns true if the sphere fully contains the cone.
         /// </summary>
+        /// <param name="s">The containing sphere.</param>
+        /// <param name="cone">The cone to test.</param>
+        /// <returns><c>true</c> if the cone is fully inside (apex and base center tested only).</returns>
         public static bool Contains(this Sphere s, Cone cone)
         {
             Vector3 baseCenter = cone.BaseCenter;
@@ -94,14 +111,16 @@ namespace XFG.Math.Shape
 
         #endregion
 
-        // ==============================================================================
-        // EXPAND TO INCLUDE
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Expand To Include
+        // ---------------------------------------------------------------------
         #region ExpandToInclude
 
         /// <summary>
         /// Expands the sphere so that it includes the given point.
         /// </summary>
+        /// <param name="s">The sphere to expand in place.</param>
+        /// <param name="p">The point to include.</param>
         public static void ExpandToInclude(ref this Sphere s, Vector3 p)
         {
             Vector3 toPoint = p - s.Center;
@@ -123,6 +142,8 @@ namespace XFG.Math.Shape
         /// <summary>
         /// Expands the sphere so that it includes another sphere.
         /// </summary>
+        /// <param name="s">The sphere to expand in place.</param>
+        /// <param name="other">The sphere to include.</param>
         public static void ExpandToInclude(ref this Sphere s, Sphere other)
         {
             Vector3 toOther = other.Center - s.Center;
@@ -154,6 +175,8 @@ namespace XFG.Math.Shape
         /// <summary>
         /// Expands the sphere to include all points in the array.
         /// </summary>
+        /// <param name="s">The sphere to expand in place.</param>
+        /// <param name="points">The points to include.</param>
         public static void ExpandToInclude(ref this Sphere s, Vector3[] points)
         {
             for (int i = 0; i < points.Length; i++)
@@ -162,14 +185,17 @@ namespace XFG.Math.Shape
 
         #endregion
 
-        // ==============================================================================
-        // MERGE
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Merge
+        // ---------------------------------------------------------------------
         #region Merge
 
         /// <summary>
         /// Returns a new sphere that encloses both input spheres.
         /// </summary>
+        /// <param name="a">The first sphere.</param>
+        /// <param name="b">The second sphere.</param>
+        /// <returns>A sphere enclosing both inputs.</returns>
         public static Sphere Merge(Sphere a, Sphere b)
         {
             Sphere result = a;
@@ -179,14 +205,16 @@ namespace XFG.Math.Shape
 
         #endregion
 
-        // ==============================================================================
-        // FROM POINTS
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // From Points
+        // ---------------------------------------------------------------------
         #region FromPoints
 
         /// <summary>
         /// Builds a sphere that encloses all points in the array.
         /// </summary>
+        /// <param name="points">The points to enclose.</param>
+        /// <returns>An enclosing sphere (not necessarily minimal), or a zero sphere if empty.</returns>
         public static Sphere FromPoints(Vector3[] points)
         {
             if (points == null || points.Length == 0)
@@ -202,14 +230,17 @@ namespace XFG.Math.Shape
 
         #endregion
 
-        // ==============================================================================
-        // INTERSECTS OR CONTAINS
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Intersects Or Contains
+        // ---------------------------------------------------------------------
         #region IntersectsOrContains
 
         /// <summary>
         /// Returns true if the spheres intersect or one contains the other.
         /// </summary>
+        /// <param name="a">The first sphere.</param>
+        /// <param name="b">The second sphere.</param>
+        /// <returns><c>true</c> if the spheres overlap.</returns>
         public static bool IntersectsOrContains(this Sphere a, Sphere b)
         {
             if (a.Contains(b) || b.Contains(a))
@@ -222,6 +253,9 @@ namespace XFG.Math.Shape
         /// <summary>
         /// Returns true if the sphere intersects or contains the point.
         /// </summary>
+        /// <param name="s">The sphere.</param>
+        /// <param name="p">The point to test.</param>
+        /// <returns><c>true</c> if the point is inside or on the sphere.</returns>
         public static bool IntersectsOrContains(this Sphere s, Vector3 p)
         {
             return s.Contains(p);

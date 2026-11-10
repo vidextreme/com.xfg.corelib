@@ -6,26 +6,47 @@ using UnityEngine;
 
 namespace XFG.Math.Shape
 {
+    /// <summary>
+    /// Computes the exact minimal enclosing (bounding) sphere of a point set using Welzl's algorithm.
+    /// </summary>
     public static class MinimalEnclosingSphere
     {
+        /// <summary>
+        /// Tolerance used when testing whether a point lies inside a sphere.
+        /// </summary>
         public const float EPSILON_CONTAIN = 1e-6f;
+
+        /// <summary>
+        /// Threshold below which a configuration of points is treated as degenerate.
+        /// </summary>
         public const float EPSILON_DEGENERATE = 1e-12f;
 
-        private static System.Random _random = new System.Random(9001); // default deterministic seed
+        private static System.Random _random = new System.Random(9001); // Default deterministic seed
 
+        /// <summary>
+        /// Reseeds the random generator used to shuffle input points, for reproducible results.
+        /// </summary>
+        /// <param name="seed">The new random seed.</param>
         public static void SetRandomSeed(int seed)
         {
             _random = new System.Random(seed);
         }
 
         /// <summary>
-        /// Iterative Welzl (no recursion)
-        /// Stable 4-point circumsphere
-        /// Deterministic if you seed Shuffle
-        /// Zero GC inside the main loop
-        /// Exact minimal sphere, not an approximation
-        /// For Burst performance use XFG.MathBurst.MinimalEnclosingSphereBurst
+        /// Computes the exact minimal sphere enclosing all given points.
         /// </summary>
+        /// <remarks>
+        /// <list type="bullet">
+        /// <item>Iterative Welzl (no recursion)</item>
+        /// <item>Stable 4-point circumsphere</item>
+        /// <item>Deterministic if you seed the shuffle (see <see cref="SetRandomSeed"/>)</item>
+        /// <item>Zero GC inside the main loop (the input is copied once)</item>
+        /// <item>Exact minimal sphere, not an approximation</item>
+        /// </list>
+        /// For Burst performance use <see cref="XFG.Math.ShapeBurst.MinimalEnclosingSphereBurst"/>.
+        /// </remarks>
+        /// <param name="points">The points to enclose.</param>
+        /// <returns>The minimal enclosing sphere, or a zero-radius sphere at the origin if empty.</returns>
         public static Sphere Compute(ReadOnlySpan<Vector3> points)
         {
             if (points == null || points.Length == 0)

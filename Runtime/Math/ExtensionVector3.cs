@@ -1,8 +1,14 @@
+// Copyright (c) 2026 John David Uy
+// Licensed under the MIT License. See LICENSE for details.
+
 using System;
 using UnityEngine;
 
 namespace XFG.Math
 {
+    /// <summary>
+    /// Extension methods and helpers for <see cref="Vector3"/> math with safe handling of degenerate vectors.
+    /// </summary>
     public static class Vector3Math
     {
         #region Constants
@@ -23,6 +29,9 @@ namespace XFG.Math
         /// Computes a normalized direction vector pointing from "from" to "to".
         /// If the two points coincide, the result is Vector3.zero to avoid division by zero.
         /// </summary>
+        /// <param name="from">The start point.</param>
+        /// <param name="to">The target point.</param>
+        /// <returns>The unit direction from <paramref name="from"/> to <paramref name="to"/>, or zero.</returns>
         public static Vector3 DirectionTo(this Vector3 from, Vector3 to)
         {
             Vector3 delta = to - from;
@@ -36,6 +45,10 @@ namespace XFG.Math
         /// Returns true if the direction is well-defined; otherwise returns false and outputs
         /// Vector3.zero. This avoids unstable normalization when the points coincide.
         /// </summary>
+        /// <param name="from">The start point.</param>
+        /// <param name="to">The target point.</param>
+        /// <param name="direction">The unit direction, or zero on failure.</param>
+        /// <returns><c>true</c> if the direction is well-defined.</returns>
         public static bool TryDirectionTo(this Vector3 from, Vector3 to, out Vector3 direction)
         {
             Vector3 delta = to - from;
@@ -60,6 +73,9 @@ namespace XFG.Math
         /// Computes the Euclidean distance between two points.
         /// This is equivalent to (a - b).magnitude and involves a square root.
         /// </summary>
+        /// <param name="a">The first point.</param>
+        /// <param name="b">The second point.</param>
+        /// <returns>The distance between the points.</returns>
         public static float DistanceTo(this Vector3 a, Vector3 b)
             => (a - b).magnitude;
 
@@ -67,6 +83,9 @@ namespace XFG.Math
         /// Computes the squared Euclidean distance between two points.
         /// This avoids the cost of a square root and is preferred for comparisons.
         /// </summary>
+        /// <param name="a">The first point.</param>
+        /// <param name="b">The second point.</param>
+        /// <returns>The squared distance between the points.</returns>
         public static float DistanceSqrTo(this Vector3 a, Vector3 b)
             => (a - b).sqrMagnitude;
 
@@ -79,6 +98,9 @@ namespace XFG.Math
         /// Projects vector v onto direction n, assuming n is already normalized.
         /// No safety checks are performed.
         /// </summary>
+        /// <param name="v">The vector to project.</param>
+        /// <param name="n">The normalized direction to project onto.</param>
+        /// <returns>The projection of <paramref name="v"/> onto <paramref name="n"/>.</returns>
         public static Vector3 ProjectOnto(this Vector3 v, Vector3 n)
             => Vector3.Dot(v, n) * n;
 
@@ -87,6 +109,9 @@ namespace XFG.Math
         /// If n is too small to normalize safely, the result is Vector3.zero.
         /// This avoids division by extremely small magnitudes.
         /// </summary>
+        /// <param name="v">The vector to project.</param>
+        /// <param name="n">The direction to project onto; need not be normalized.</param>
+        /// <returns>The projection, or zero if <paramref name="n"/> is degenerate.</returns>
         public static Vector3 ProjectOntoSafe(this Vector3 v, Vector3 n)
         {
             float sqr = n.sqrMagnitude;
@@ -104,6 +129,8 @@ namespace XFG.Math
         /// Returns a normalized version of v. If the vector is too small to
         /// normalize safely, Vector3.zero is returned to avoid unstable division.
         /// </summary>
+        /// <param name="v">The vector to normalize.</param>
+        /// <returns>The unit vector, or zero if <paramref name="v"/> is degenerate.</returns>
         public static Vector3 NormalizeSafe(this Vector3 v)
         {
             float sqr = v.sqrMagnitude;
@@ -117,6 +144,9 @@ namespace XFG.Math
         /// sufficient magnitude to normalize; otherwise returns false and outputs
         /// Vector3.zero. This prevents unstable results from tiny vectors.
         /// </summary>
+        /// <param name="v">The vector to normalize.</param>
+        /// <param name="normalized">The unit vector, or zero on failure.</param>
+        /// <returns><c>true</c> if the vector was normalized.</returns>
         public static bool TryNormalize(this Vector3 v, out Vector3 normalized)
         {
             float sqr = v.sqrMagnitude;
@@ -141,6 +171,9 @@ namespace XFG.Math
         /// If either vector is degenerate, the angle is defined as 0 degrees.
         /// The dot product is clamped to [-1, 1] to protect against floating point drift.
         /// </summary>
+        /// <param name="a">The first vector.</param>
+        /// <param name="b">The second vector.</param>
+        /// <returns>The unsigned angle in degrees, in [0, 180].</returns>
         public static float AngleTo(this Vector3 a, Vector3 b)
         {
             float denom = Mathf.Sqrt(a.sqrMagnitude * b.sqrMagnitude);
@@ -161,6 +194,10 @@ namespace XFG.Math
         /// If the remaining distance is less than maxDelta, the target is returned directly.
         /// This method avoids overshooting and behaves consistently even when the points coincide.
         /// </summary>
+        /// <param name="current">The current position.</param>
+        /// <param name="target">The target position.</param>
+        /// <param name="maxDelta">The maximum distance to move.</param>
+        /// <returns>The new position.</returns>
         public static Vector3 MoveTowards(this Vector3 current, Vector3 target, float maxDelta)
         {
             Vector3 delta = target - current;
@@ -183,6 +220,9 @@ namespace XFG.Math
         /// the method returns Vector3.zero to avoid unstable division.
         /// Reflection is computed as: r = v - 2 * projection_of_v_onto_n.
         /// </summary>
+        /// <param name="v">The vector to reflect.</param>
+        /// <param name="n">The reflection normal; need not be normalized.</param>
+        /// <returns>The reflected vector, or zero if <paramref name="n"/> is degenerate.</returns>
         public static Vector3 Reflect(this Vector3 v, Vector3 n)
         {
             float sqr = n.sqrMagnitude;
@@ -201,6 +241,10 @@ namespace XFG.Math
         /// the method returns false and outputs Vector3.zero to avoid unstable division.
         /// Reflection is computed as: r = v - 2 * projection_of_v_onto_n.
         /// </summary>
+        /// <param name="v">The vector to reflect.</param>
+        /// <param name="n">The reflection normal; need not be normalized.</param>
+        /// <param name="reflected">The reflected vector, or zero on failure.</param>
+        /// <returns><c>true</c> if the reflection was computed.</returns>
         public static bool TryReflect(this Vector3 v, Vector3 n, out Vector3 reflected)
         {
             float sqr = n.sqrMagnitude;
@@ -222,6 +266,9 @@ namespace XFG.Math
         /// The normal is normalized internally. If n is too small to normalize safely,
         /// the method returns Vector3.zero to avoid unstable division.
         /// </summary>
+        /// <param name="v">The vector to reflect.</param>
+        /// <param name="n">The reflection normal; normalized internally.</param>
+        /// <returns>The reflected vector, or zero if <paramref name="n"/> is degenerate.</returns>
         public static Vector3 ReflectSafe(this Vector3 v, Vector3 n)
         {
             float sqr = n.sqrMagnitude;
@@ -238,6 +285,9 @@ namespace XFG.Math
         /// Computes the reflection of this vector across the plane defined by normal n.
         /// Assumes n is already normalized. No safety checks are performed.
         /// </summary>
+        /// <param name="v">The vector to reflect.</param>
+        /// <param name="n">The normalized reflection normal.</param>
+        /// <returns>The reflected vector.</returns>
         public static Vector3 ReflectNormalized(this Vector3 v, Vector3 n)
         {
             float dot = Vector3.Dot(v, n);
@@ -255,6 +305,8 @@ namespace XFG.Math
         /// This method performs a straightforward summation followed by division and does not
         /// apply numerical stabilization, which is sufficient for typical gameplay coordinate ranges.
         /// </summary>
+        /// <param name="points">The points to average.</param>
+        /// <returns>The centroid of the points, or zero if empty.</returns>
         public static Vector3 Midpoint(ReadOnlySpan<Vector3> points)
         {
             if (points.Length == 0)

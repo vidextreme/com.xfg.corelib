@@ -1,28 +1,30 @@
-// ------------------------------------------------------------------------------
-// TriangleMath
-// ------------------------------------------------------------------------------
-// Core math utilities for triangles.
-//
-// Provides:
-// - Common helpers (normals, projections, interval tests)
-// - Barycentric coordinates and interpolation
-// - Area, normal, centroid, incenter, circumcenter
-// - Inradius, circumradius, aspect ratio, quality metrics
-// - Degeneracy checks
-// - Closest point queries (point, segment, ray, line)
-//
-// All methods are deterministic, allocation-free, and suitable for Burst jobs.
-// ------------------------------------------------------------------------------
+// Copyright (c) 2026 John David Uy
+// Licensed under the MIT License. See LICENSE for details.
 
 using UnityEngine;
 
 namespace XFG.Math
 {
+    /// <summary>
+    /// Core math utilities for triangles.
+    /// </summary>
+    /// <remarks>
+    /// Provides:
+    /// <list type="bullet">
+    /// <item>Common helpers (normals, projections, interval tests)</item>
+    /// <item>Barycentric coordinates and interpolation</item>
+    /// <item>Area, normal, centroid, incenter, circumcenter</item>
+    /// <item>Inradius, circumradius, aspect ratio, quality metrics</item>
+    /// <item>Degeneracy checks</item>
+    /// <item>Closest point queries (point, segment, ray, line)</item>
+    /// </list>
+    /// All methods are deterministic, allocation-free, and suitable for Burst jobs.
+    /// </remarks>
     public static class TriangleMath
     {
-        // ==============================================================================
-        // COMMON
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Common
+        // ---------------------------------------------------------------------
         #region Common
 
         /// <summary>
@@ -94,9 +96,9 @@ namespace XFG.Math
 
         #endregion
 
-        // ==============================================================================
-        // BARYCENTRIC
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Barycentric
+        // ---------------------------------------------------------------------
         #region Barycentric
 
         /// <summary>
@@ -157,9 +159,9 @@ namespace XFG.Math
 
         #endregion
 
-        // ==============================================================================
-        // GEOMETRY
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Geometry
+        // ---------------------------------------------------------------------
         #region Geometry
 
         /// <summary>
@@ -203,9 +205,9 @@ namespace XFG.Math
 
         #endregion
 
-        // ==============================================================================
-        // CENTERS & RADII
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Centers and Radii
+        // ---------------------------------------------------------------------
         #region CentersAndRadii
 
         /// <summary>
@@ -291,9 +293,9 @@ namespace XFG.Math
 
         #endregion
 
-        // ==============================================================================
-        // QUALITY
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Quality
+        // ---------------------------------------------------------------------
         #region Quality
 
         /// <summary>
@@ -371,9 +373,9 @@ namespace XFG.Math
 
         #endregion
 
-        // ==============================================================================
-        // DEGENERACY
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Degeneracy
+        // ---------------------------------------------------------------------
         #region Degeneracy
 
         /// <summary>
@@ -390,9 +392,10 @@ namespace XFG.Math
         }
 
         #endregion
-        // ==============================================================================
-        // CLOSEST POINTS
-        // ==============================================================================
+
+        // ---------------------------------------------------------------------
+        // Closest Points
+        // ---------------------------------------------------------------------
         #region ClosestPoints
 
         /// <summary>
@@ -489,7 +492,10 @@ namespace XFG.Math
         /// <param name="c">Triangle vertex C.</param>
         /// <param name="origin">Ray origin.</param>
         /// <param name="direction">Ray direction.</param>
-        /// <returns>Closest point on the triangle.</returns>
+        /// <returns>
+        /// The point on the ray closest to the triangle point nearest the ray origin
+        /// (an approximation; the result lies on the ray, not the triangle).
+        /// </returns>
         public static Vector3 ClosestPointOnTriangleToRay(
             Vector3 a, Vector3 b, Vector3 c,
             Vector3 origin, Vector3 direction)
@@ -506,7 +512,10 @@ namespace XFG.Math
         /// <param name="c">Triangle vertex C.</param>
         /// <param name="L0">A point on the line.</param>
         /// <param name="Ld">Line direction.</param>
-        /// <returns>Closest point on the triangle.</returns>
+        /// <returns>
+        /// The point on the line closest to the triangle point nearest <paramref name="L0"/>
+        /// (an approximation; the result lies on the line, not the triangle).
+        /// </returns>
         public static Vector3 ClosestPointOnTriangleToLine(
             Vector3 a, Vector3 b, Vector3 c,
             Vector3 L0, Vector3 Ld)
@@ -518,5 +527,3 @@ namespace XFG.Math
         #endregion
     }
 }
-
-

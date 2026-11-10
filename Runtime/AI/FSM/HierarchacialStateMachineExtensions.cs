@@ -9,34 +9,36 @@ namespace XFG.AI.FSM.Hierarchical
 {
     /// <summary>
     /// Hierarchical Finite State Machine (HFSM) extension layer for IStateMachine.
-    ///
-    /// This adds hierarchical (parent -> child) state behavior without modifying
+    /// </summary>
+    /// <remarks>
+    /// This adds hierarchical (parent -&gt; child) state behavior without modifying
     /// the original state machine. States may optionally implement
     /// IHierarchicalState to participate in the hierarchy.
     ///
-    /// IMPLEMENTATION OVERVIEW:
-    /// -------------------------
-    /// - Each hierarchical state exposes a Parent pointer.
-    /// - The machine builds an active stack from root -> leaf.
-    /// - Update bubbling:
-    ///       Child states get first chance to handle update.
-    ///       If they decline, parents may handle it.
-    /// - Message bubbling:
-    ///       Leaf states get first chance to handle messages.
-    ///       If they decline, parents may handle it.
+    /// Implementation overview:
+    /// <list type="bullet">
+    /// <item><description>Each hierarchical state exposes a Parent pointer.</description></item>
+    /// <item><description>The machine builds an active stack from root -&gt; leaf.</description></item>
+    /// <item><description>Update bubbling: the stack is walked from root to leaf and the
+    /// first state that handles updates receives it.</description></item>
+    /// <item><description>Message bubbling: leaf states get first chance to handle messages.
+    /// If they decline, parents may handle it.</description></item>
+    /// </list>
     ///
     /// This design keeps the base FSM simple while enabling layered behavior
-    /// such as movement -> locomotion -> running, combat -> melee -> combo, etc.
-    /// </summary>
+    /// such as movement -&gt; locomotion -&gt; running, combat -&gt; melee -&gt; combo, etc.
+    /// </remarks>
     public static class HierarchacialStateMachineExtensions
     {
-        // --------------------------------------------------------------------
-        //  HIERARCHICAL STATE INTERFACE
-        // --------------------------------------------------------------------
-
+        // ---------------------------------------------------------------------
+        // Hierarchical State Interface
+        // ---------------------------------------------------------------------
         /// <summary>
         /// Optional interface for states that participate in a hierarchy.
         /// </summary>
+        /// <typeparam name="TMachineType">The concrete machine component type.</typeparam>
+        /// <typeparam name="TStateIDType">The state identifier type.</typeparam>
+        /// <typeparam name="TMessageType">The message identifier type.</typeparam>
         public interface IHierarchicalState<TMachineType, TStateIDType, TMessageType> :
             IStateMachine<TMachineType, TStateIDType, TMessageType>.IState
             where TMachineType : MonoBehaviour
@@ -66,14 +68,14 @@ namespace XFG.AI.FSM.Hierarchical
             /// <summary>
             /// Hierarchical message callback.
             /// </summary>
+            /// <param name="msg">The message received.</param>
+            /// <param name="args">Arguments sent with the message.</param>
             void OnReceiveMessageHierarchy(TMessageType msg, object[] args);
         }
 
-
-        // --------------------------------------------------------------------
-        //  ACTIVE HIERARCHY STACK
-        // --------------------------------------------------------------------
-
+        // ---------------------------------------------------------------------
+        // Active Hierarchy Stack
+        // ---------------------------------------------------------------------
         private static readonly Dictionary<object, List<object>> _activeStacks =
             new Dictionary<object, List<object>>();
 
@@ -85,11 +87,9 @@ namespace XFG.AI.FSM.Hierarchical
             return _activeStacks[machine];
         }
 
-
-        // --------------------------------------------------------------------
-        //  STACK BUILDING
-        // --------------------------------------------------------------------
-
+        // ---------------------------------------------------------------------
+        // Stack Building
+        // ---------------------------------------------------------------------
         private static void BuildActiveStack<TMachineType, TStateIDType, TMessageType>(
             IStateMachine<TMachineType, TStateIDType, TMessageType> machine,
             IHierarchicalState<TMachineType, TStateIDType, TMessageType> leaf)
@@ -107,15 +107,21 @@ namespace XFG.AI.FSM.Hierarchical
                 current = current.Parent;
             }
 
-            // Reverse so stack is root -> leaf
+            // Reverse so the stack is root -> leaf
             stack.Reverse();
         }
 
-
-        // --------------------------------------------------------------------
-        //  HOOK INTO STATE TRANSITIONS
-        // --------------------------------------------------------------------
-
+        // ---------------------------------------------------------------------
+        // Hook Into State Transitions
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Rebuilds the active hierarchy stack from the machine's current state.
+        /// Call this after every state transition.
+        /// </summary>
+        /// <typeparam name="TMachineType">The concrete machine component type.</typeparam>
+        /// <typeparam name="TStateIDType">The state identifier type.</typeparam>
+        /// <typeparam name="TMessageType">The message identifier type.</typeparam>
+        /// <param name="machine">The state machine whose hierarchy to rebuild.</param>
         public static void RebuildHierarchy<TMachineType, TStateIDType, TMessageType>(
             this IStateMachine<TMachineType, TStateIDType, TMessageType> machine)
             where TMachineType : MonoBehaviour
@@ -139,11 +145,17 @@ namespace XFG.AI.FSM.Hierarchical
             }
         }
 
-
-        // --------------------------------------------------------------------
-        //  HIERARCHICAL UPDATE
-        // --------------------------------------------------------------------
-
+        // ---------------------------------------------------------------------
+        // Hierarchical Update
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Ticks the hierarchy: the first state from root to leaf that handles updates receives it.
+        /// Falls back to the current state's normal update if none do.
+        /// </summary>
+        /// <typeparam name="TMachineType">The concrete machine component type.</typeparam>
+        /// <typeparam name="TStateIDType">The state identifier type.</typeparam>
+        /// <typeparam name="TMessageType">The message identifier type.</typeparam>
+        /// <param name="machine">The state machine to update.</param>
         public static void UpdateMachineHFSM<TMachineType, TStateIDType, TMessageType>(
             this IStateMachine<TMachineType, TStateIDType, TMessageType> machine)
             where TMachineType : MonoBehaviour
@@ -168,15 +180,23 @@ namespace XFG.AI.FSM.Hierarchical
                 }
             }
 
-            // Fallback to leaf's normal update
+            // Fall back to the leaf's normal update
             machine.CurrentState?.OnStateUpdate();
         }
 
-
-        // --------------------------------------------------------------------
-        //  HIERARCHICAL MESSAGE ROUTING
-        // --------------------------------------------------------------------
-
+        // ---------------------------------------------------------------------
+        // Hierarchical Message Routing
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Routes a message through the hierarchy: the first state from leaf to root that handles messages receives it.
+        /// Falls back to the current state's normal message handler if none do.
+        /// </summary>
+        /// <typeparam name="TMachineType">The concrete machine component type.</typeparam>
+        /// <typeparam name="TStateIDType">The state identifier type.</typeparam>
+        /// <typeparam name="TMessageType">The message identifier type.</typeparam>
+        /// <param name="machine">The state machine to send the message to.</param>
+        /// <param name="msg">The message to send.</param>
+        /// <param name="args">Arguments sent with the message.</param>
         public static void SendMessageHFSM<TMachineType, TStateIDType, TMessageType>(
             this IStateMachine<TMachineType, TStateIDType, TMessageType> machine,
             TMessageType msg,
@@ -203,7 +223,7 @@ namespace XFG.AI.FSM.Hierarchical
                 }
             }
 
-            // Fallback to leaf's normal message handler
+            // Fall back to the leaf's normal message handler
             machine.CurrentState?.OnReceiveMessage(msg, args);
         }
     }

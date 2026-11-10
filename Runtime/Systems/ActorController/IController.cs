@@ -6,22 +6,21 @@ using System;
 namespace XFG.ActorController
 {
     /// <summary>
-    /// IController
-    ///
     /// A lightweight interface for all Controller types. Controllers receive
-    /// notifications ("Inform") from Actors, allowing Controllers to react to
-    /// Actor-driven events such as:
-    /// - State changes
-    /// - Messages
-    /// - World interactions
-    /// - AI perception updates
-    ///
-    /// Controllers do NOT drive the Actor directly. They only send commands TO the
-    /// Actor, and receive information FROM the Actor.
-    ///
-    /// This keeps the Actor–Controller relationship clean, decoupled, and fully
-    /// engine-agnostic.
+    /// notifications ("Inform") from Actors so they can react to Actor-driven events.
     /// </summary>
+    /// <remarks>
+    /// Typical events include:
+    /// <list type="bullet">
+    /// <item>State changes</item>
+    /// <item>Messages</item>
+    /// <item>World interactions</item>
+    /// <item>AI perception updates</item>
+    /// </list>
+    /// Controllers do NOT drive the Actor directly. They only send commands TO the
+    /// Actor, and receive information FROM the Actor. This keeps the Actor–Controller
+    /// relationship clean, decoupled, and fully engine-agnostic.
+    /// </remarks>
     public interface IController<TInformType>
         where TInformType : IComparable
     {
@@ -29,6 +28,8 @@ namespace XFG.ActorController
         /// Receives information from the Actor.
         /// Controllers use this to react to Actor events or world events.
         /// </summary>
+        /// <param name="info">The kind of information being reported.</param>
+        /// <param name="objs">Optional extra data associated with the information.</param>
         void Inform(TInformType info, params object[] objs);
     }
 }

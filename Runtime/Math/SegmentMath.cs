@@ -1,34 +1,41 @@
 // Copyright (c) 2026 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
-// ------------------------------------------------------------------------------
-// SegmentMath
-// ------------------------------------------------------------------------------
-// Math utilities for line segments and infinite/half-infinite lines.
-//
-// Provides:
-// - Closest point on infinite line
-// - Closest point on ray (Ray + origin/direction overloads)
-// - Closest point on segment (core + aliases)
-// - Closest points between segment and infinite line
-// - Closest points between segment and ray
-// - Segment vs segment closest points
-// - Segment vs segment squared distance
-// - Closest point on segment to AABB
-// - Distance to point
-// - Segment length and direction
-//
-// All repeated property getters are cached.
-// ------------------------------------------------------------------------------
 
 using UnityEngine;
 
 namespace XFG.Math
 {
+    /// <summary>
+    /// Math utilities for line segments and infinite/half-infinite lines.
+    /// </summary>
+    /// <remarks>
+    /// Provides:
+    /// <list type="bullet">
+    /// <item>Closest point on infinite line</item>
+    /// <item>Closest point on ray (Ray + origin/direction overloads)</item>
+    /// <item>Closest point on segment (core + aliases)</item>
+    /// <item>Closest points between segment and infinite line</item>
+    /// <item>Closest points between segment and ray</item>
+    /// <item>Segment vs segment closest points</item>
+    /// <item>Segment vs segment squared distance</item>
+    /// <item>Closest point on segment to AABB</item>
+    /// <item>Distance to point</item>
+    /// <item>Segment length and direction</item>
+    /// </list>
+    /// All repeated property getters are cached.
+    /// </remarks>
     public static class SegmentMath
     {
-        // ==========================================================================
-        // CLOSEST POINT ON INFINITE LINE
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Closest Point on Infinite Line
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Returns the point on the infinite line through a and b closest to the given point.
+        /// </summary>
+        /// <param name="a">A point on the line.</param>
+        /// <param name="b">A second point on the line.</param>
+        /// <param name="point">The query point.</param>
+        /// <returns>The closest point on the line, or <paramref name="a"/> if a and b coincide.</returns>
         public static Vector3 ClosestPointOnLineToPoint(Vector3 a, Vector3 b, Vector3 point)
         {
             Vector3 ab = b - a;
@@ -41,9 +48,15 @@ namespace XFG.Math
             return a + ab * t;
         }
 
-        // ==========================================================================
-        // CLOSEST POINT ON RAY
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Closest Point on Ray
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Returns the point on the ray closest to the given point.
+        /// </summary>
+        /// <param name="ray">The ray.</param>
+        /// <param name="point">The query point.</param>
+        /// <returns>The closest point on the ray.</returns>
         public static Vector3 ClosestPointOnRayToPoint(Ray ray, Vector3 point)
         {
             Vector3 o = ray.origin;
@@ -55,14 +68,28 @@ namespace XFG.Math
             return o + d * t;
         }
 
+        /// <summary>
+        /// Returns the point on the ray closest to the given point.
+        /// </summary>
+        /// <param name="origin">The ray origin.</param>
+        /// <param name="direction">The ray direction.</param>
+        /// <param name="point">The query point.</param>
+        /// <returns>The closest point on the ray.</returns>
         public static Vector3 ClosestPointOnRayToPoint(Vector3 origin, Vector3 direction, Vector3 point)
         {
             return ClosestPointOnRayToPoint(new Ray(origin, direction), point);
         }
 
-        // ==========================================================================
-        // CORE: CLOSEST POINT ON SEGMENT
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Core: Closest Point on Segment
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Returns the point on segment ab closest to the given point.
+        /// </summary>
+        /// <param name="a">The segment start point.</param>
+        /// <param name="b">The segment end point.</param>
+        /// <param name="point">The query point.</param>
+        /// <returns>The closest point on the segment.</returns>
         public static Vector3 ClosestPoint(Vector3 a, Vector3 b, Vector3 point)
         {
             Vector3 ab = b - a;
@@ -77,23 +104,42 @@ namespace XFG.Math
             return a + ab * t;
         }
 
+        /// <summary>
+        /// Alias of <see cref="ClosestPoint(Vector3, Vector3, Vector3)"/>.
+        /// </summary>
+        /// <param name="a">The segment start point.</param>
+        /// <param name="b">The segment end point.</param>
+        /// <param name="point">The query point.</param>
+        /// <returns>The closest point on the segment.</returns>
         public static Vector3 ClosestPointOnSegmentToPoint(Vector3 a, Vector3 b, Vector3 point)
         {
             return ClosestPoint(a, b, point);
         }
 
+        /// <summary>
+        /// Alias of <see cref="ClosestPoint(Vector3, Vector3, Vector3)"/>.
+        /// </summary>
+        /// <param name="a">The segment start point.</param>
+        /// <param name="b">The segment end point.</param>
+        /// <param name="point">The query point.</param>
+        /// <returns>The closest point on the segment.</returns>
         public static Vector3 ClosestPointOnSegment(Vector3 a, Vector3 b, Vector3 point)
         {
             return ClosestPoint(a, b, point);
         }
 
-        // ==========================================================================
-        // CLOSEST POINT ON SEGMENT TO AABB
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Closest Point on Segment to AABB
+        // ---------------------------------------------------------------------
         /// <summary>
         /// Returns the closest point on a line segment to an axis-aligned bounding box.
         /// Uses the slab method to compute the earliest valid intersection parameter.
         /// </summary>
+        /// <param name="p0">The segment start point.</param>
+        /// <param name="p1">The segment end point.</param>
+        /// <param name="aabbMin">The minimum corner of the box.</param>
+        /// <param name="aabbMax">The maximum corner of the box.</param>
+        /// <returns>A point on the segment.</returns>
         public static Vector3 ClosestPointOnSegmentToAABB(
             Vector3 p0,
             Vector3 p1,
@@ -150,6 +196,10 @@ namespace XFG.Math
         /// <summary>
         /// Returns the closest point on an AABB to a given point.
         /// </summary>
+        /// <param name="point">The query point.</param>
+        /// <param name="min">The minimum corner of the box.</param>
+        /// <param name="max">The maximum corner of the box.</param>
+        /// <returns>The point clamped to the box.</returns>
         public static Vector3 ClosestPointOnAABB(Vector3 point, Vector3 min, Vector3 max)
         {
             float x = Mathf.Clamp(point.x, min.x, max.x);
@@ -158,9 +208,18 @@ namespace XFG.Math
             return new Vector3(x, y, z);
         }
 
-        // ==========================================================================
-        // SEGMENT vs LINE CLOSEST POINTS
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Segment vs Line Closest Points
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Computes the closest pair of points between a segment and an infinite line.
+        /// </summary>
+        /// <param name="segA">The segment start point.</param>
+        /// <param name="segB">The segment end point.</param>
+        /// <param name="lineA">A point on the line.</param>
+        /// <param name="lineB">A second point on the line.</param>
+        /// <param name="segPoint">The closest point on the segment.</param>
+        /// <param name="linePoint">The closest point on the line.</param>
         public static void ClosestPointOnSegmentToLine(
             Vector3 segA, Vector3 segB,
             Vector3 lineA, Vector3 lineB,
@@ -196,6 +255,14 @@ namespace XFG.Math
             linePoint = lineA + d2 * t;
         }
 
+        /// <summary>
+        /// Returns the point on a segment closest to an infinite line.
+        /// </summary>
+        /// <param name="segA">The segment start point.</param>
+        /// <param name="segB">The segment end point.</param>
+        /// <param name="lineA">A point on the line.</param>
+        /// <param name="lineB">A second point on the line.</param>
+        /// <returns>The closest point on the segment.</returns>
         public static Vector3 ClosestPointOnSegmentToLine(
             Vector3 segA, Vector3 segB,
             Vector3 lineA, Vector3 lineB)
@@ -204,9 +271,17 @@ namespace XFG.Math
             return segPoint;
         }
 
-        // ==========================================================================
-        // SEGMENT vs RAY CLOSEST POINTS
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Segment vs Ray Closest Points
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Computes the closest pair of points between a segment and a ray.
+        /// </summary>
+        /// <param name="segA">The segment start point.</param>
+        /// <param name="segB">The segment end point.</param>
+        /// <param name="ray">The ray.</param>
+        /// <param name="segPoint">The closest point on the segment.</param>
+        /// <param name="rayPoint">The closest point on the ray.</param>
         public static void ClosestPointOnSegmentToRay(
             Vector3 segA, Vector3 segB,
             Ray ray,
@@ -252,6 +327,13 @@ namespace XFG.Math
             rayPoint = ray.origin + d2 * t;
         }
 
+        /// <summary>
+        /// Returns the point on a segment closest to a ray.
+        /// </summary>
+        /// <param name="segA">The segment start point.</param>
+        /// <param name="segB">The segment end point.</param>
+        /// <param name="ray">The ray.</param>
+        /// <returns>The closest point on the segment.</returns>
         public static Vector3 ClosestPointOnSegmentToRay(
             Vector3 segA, Vector3 segB,
             Ray ray)
@@ -260,9 +342,18 @@ namespace XFG.Math
             return segPoint;
         }
 
-        // ==========================================================================
-        // SEGMENT vs SEGMENT CLOSEST POINTS
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Segment vs Segment Closest Points
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Computes the closest pair of points between two segments.
+        /// </summary>
+        /// <param name="p1">The start point of the first segment.</param>
+        /// <param name="q1">The end point of the first segment.</param>
+        /// <param name="p2">The start point of the second segment.</param>
+        /// <param name="q2">The end point of the second segment.</param>
+        /// <param name="c1">The closest point on the first segment.</param>
+        /// <param name="c2">The closest point on the second segment.</param>
         public static void ClosestPoints(
             Vector3 p1, Vector3 q1,
             Vector3 p2, Vector3 q2,
@@ -332,9 +423,17 @@ namespace XFG.Math
             c2 = p2 + d2 * t;
         }
 
-        // ==========================================================================
-        // SEGMENT vs SEGMENT SQUARED DISTANCE
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Segment vs Segment Squared Distance
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Returns the squared distance between two segments.
+        /// </summary>
+        /// <param name="p1">The start point of the first segment.</param>
+        /// <param name="q1">The end point of the first segment.</param>
+        /// <param name="p2">The start point of the second segment.</param>
+        /// <param name="q2">The end point of the second segment.</param>
+        /// <returns>The squared distance between the closest points of the segments.</returns>
         public static float SegmentSegmentDistanceSq(
             Vector3 p1, Vector3 q1,
             Vector3 p2, Vector3 q2)
@@ -343,14 +442,26 @@ namespace XFG.Math
             return (c1 - c2).sqrMagnitude;
         }
 
-        // ==========================================================================
-        // LENGTH AND DIRECTION
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Length and Direction
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Returns the length of segment ab.
+        /// </summary>
+        /// <param name="a">The segment start point.</param>
+        /// <param name="b">The segment end point.</param>
+        /// <returns>The segment length.</returns>
         public static float Length(Vector3 a, Vector3 b)
         {
             return (b - a).magnitude;
         }
 
+        /// <summary>
+        /// Returns the normalized direction from a to b.
+        /// </summary>
+        /// <param name="a">The segment start point.</param>
+        /// <param name="b">The segment end point.</param>
+        /// <returns>The unit direction, or <see cref="Vector3.zero"/> for a degenerate segment.</returns>
         public static Vector3 Direction(Vector3 a, Vector3 b)
         {
             Vector3 d = b - a;

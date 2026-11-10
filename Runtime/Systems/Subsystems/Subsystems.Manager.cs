@@ -15,9 +15,12 @@ namespace XFG
     internal static class SubsystemManager
     {
         /// <summary>
-        /// Sorts subsystem assets using StartupOrderAttribute.
+        /// Sorts subsystem assets using <see cref="StartupOrderAttribute"/>.
         /// Duplicate final orders are not allowed.
         /// </summary>
+        /// <typeparam name="T">The subsystem asset type.</typeparam>
+        /// <param name="assets">The assets to sort.</param>
+        /// <returns>A new list of assets in ascending startup order.</returns>
         public static List<T> Sort<T>(IEnumerable<T> assets) where T : ISubsystemAsset
         {
             var list = new List<T>(assets);
@@ -54,8 +57,11 @@ namespace XFG
 
         /// <summary>
         /// Instantiates subsystem instances from assets.
-        /// Calls InjectAsset() if the instance implements IRequireAsset.
+        /// Calls <c>InjectAsset()</c> if the instance implements <see cref="IRequireAsset"/>.
+        /// Disabled assets are skipped.
         /// </summary>
+        /// <param name="assets">The assets to instantiate.</param>
+        /// <returns>The created instances, keyed by instance type.</returns>
         public static Dictionary<Type, ISubsystemInstance> Instantiate(IEnumerable<ISubsystemAsset> assets)
         {
             var map = new Dictionary<Type, ISubsystemInstance>();
@@ -65,15 +71,15 @@ namespace XFG
                 if (!asset.Enabled)
                     continue;
 
-                // 1. Create the instance
+                // Create the instance
                 var instance = asset.CreateInstance();
                 var type = instance.GetType();
 
-                // 2. Inject the asset if required
+                // Inject the asset if required
                 if (instance is IRequireAsset ra)
                     ra.InjectAsset(asset);
 
-                // 3. Store by instance type
+                // Store by instance type
                 map[type] = instance;
             }
 
@@ -83,6 +89,9 @@ namespace XFG
         /// <summary>
         /// Injects dependencies into all subsystem instances that require them.
         /// </summary>
+        /// <param name="engine">Engine-level subsystem instances.</param>
+        /// <param name="group">Group-level subsystem instances.</param>
+        /// <param name="world">World-level subsystem instances.</param>
         public static void InjectDependencies(
             IReadOnlyDictionary<Type, ISubsystemInstance> engine,
             IReadOnlyDictionary<Type, ISubsystemInstance> group,
@@ -105,8 +114,12 @@ namespace XFG
         }
 
         /// <summary>
-        /// Runs initialization lifecycle for all subsystem instances.
+        /// Runs the initialization lifecycle for all subsystem instances,
+        /// in engine, group, then world order.
         /// </summary>
+        /// <param name="engine">Engine-level subsystem instances.</param>
+        /// <param name="group">Group-level subsystem instances.</param>
+        /// <param name="world">World-level subsystem instances.</param>
         public static void InitializeAll(
             IReadOnlyDictionary<Type, ISubsystemInstance> engine,
             IReadOnlyDictionary<Type, ISubsystemInstance> group,
@@ -128,8 +141,12 @@ namespace XFG
         }
 
         /// <summary>
-        /// Runs deinitialization lifecycle for all subsystem instances.
+        /// Runs the deinitialization lifecycle for all subsystem instances,
+        /// in engine, group, then world order.
         /// </summary>
+        /// <param name="engine">Engine-level subsystem instances.</param>
+        /// <param name="group">Group-level subsystem instances.</param>
+        /// <param name="world">World-level subsystem instances.</param>
         public static void DeinitializeAll(
             IReadOnlyDictionary<Type, ISubsystemInstance> engine,
             IReadOnlyDictionary<Type, ISubsystemInstance> group,

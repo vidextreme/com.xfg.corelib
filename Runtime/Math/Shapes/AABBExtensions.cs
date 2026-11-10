@@ -1,58 +1,65 @@
 // Copyright (c) 2026 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
-// ------------------------------------------------------------------------------
-// AABBExtensions
-// ------------------------------------------------------------------------------
-// Utility extensions for UnityEngine.Bounds (AABB).
-//
-// These helpers provide:
-// - Volume and surface area
-// - Expand / Inflate operations
-// - Encapsulation of primitive shapes (Sphere, Capsule, Cylinder, Cone)
-// - Transforming an AABB by an arbitrary matrix
-//
-// All methods are deterministic, allocation-free, and suitable for Burst jobs.
-// ------------------------------------------------------------------------------
 
 using UnityEngine;
 
 namespace XFG.Math.Shape
 {
+    /// <summary>
+    /// Utility extensions for UnityEngine.Bounds (AABB).
+    /// </summary>
+    /// <remarks>
+    /// These helpers provide:
+    /// <list type="bullet">
+    /// <item>Volume and surface area</item>
+    /// <item>Expand / Inflate operations</item>
+    /// <item>Encapsulation of primitive shapes (Sphere, Capsule, Cylinder, Cone)</item>
+    /// <item>Transforming an AABB by an arbitrary matrix</item>
+    /// </list>
+    /// All methods are deterministic, allocation-free, and suitable for Burst jobs.
+    /// </remarks>
     public static class AABBExtensions
     {
-        // ==========================================================================
-        // VOLUME
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Volume
+        // ---------------------------------------------------------------------
         /// <summary>
         /// Returns the volume of the AABB.
         /// This is simply width * height * depth.
         /// </summary>
+        /// <param name="b">The bounds.</param>
+        /// <returns>The box volume.</returns>
         public static float Volume(this Bounds b)
         {
             Vector3 s = b.size;
             return s.x * s.y * s.z;
         }
 
-        // ==========================================================================
-        // SURFACE AREA
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Surface Area
+        // ---------------------------------------------------------------------
         /// <summary>
         /// Returns the total surface area of the AABB.
         /// Formula: 2 * (xy + yz + zx)
         /// </summary>
+        /// <param name="b">The bounds.</param>
+        /// <returns>The total surface area.</returns>
         public static float SurfaceArea(this Bounds b)
         {
             Vector3 s = b.size;
             return 2f * (s.x * s.y + s.y * s.z + s.z * s.x);
         }
 
-        // ==========================================================================
-        // EXPAND / INFLATE
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Expand / Inflate
+        // ---------------------------------------------------------------------
         /// <summary>
         /// Uniformly expands the AABB by the given amount in all directions.
         /// Equivalent to inflating the extents by +amount.
         /// </summary>
+        /// <param name="b">The bounds to modify (passed by value).</param>
+        /// <param name="amount">The distance to grow on every side.</param>
+        /// <returns>The expanded bounds.</returns>
         public static Bounds Expand(this Bounds b, float amount)
         {
             Vector3 delta = new Vector3(amount, amount, amount);
@@ -62,21 +69,27 @@ namespace XFG.Math.Shape
 
         /// <summary>
         /// Expands the AABB by a non-uniform amount per axis.
-        /// Each axis expands by ±amount.x/y/z.
+        /// Each axis expands by plus or minus amount.x/y/z.
         /// </summary>
+        /// <param name="b">The bounds to modify (passed by value).</param>
+        /// <param name="amount">The distance to grow on each side, per axis.</param>
+        /// <returns>The expanded bounds.</returns>
         public static Bounds Expand(this Bounds b, Vector3 amount)
         {
             b.Expand(amount * 2f);
             return b;
         }
 
-        // ==========================================================================
-        // ENCAPSULATE SHAPES
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Encapsulate Shapes
+        // ---------------------------------------------------------------------
         /// <summary>
         /// Expands the AABB so that it fully contains the sphere.
         /// Achieved by encapsulating the sphere's extreme points.
         /// </summary>
+        /// <param name="b">The bounds to modify (passed by value).</param>
+        /// <param name="s">The sphere to contain.</param>
+        /// <returns>The grown bounds.</returns>
         public static Bounds Encapsulate(this Bounds b, Sphere s)
         {
             b.Encapsulate(s.Center + Vector3.one * s.Radius);
@@ -88,6 +101,9 @@ namespace XFG.Math.Shape
         /// Expands the AABB so that it fully contains the capsule.
         /// Encapsulates both endpoints inflated by the capsule radius.
         /// </summary>
+        /// <param name="b">The bounds to modify (passed by value).</param>
+        /// <param name="c">The capsule to contain.</param>
+        /// <returns>The grown bounds.</returns>
         public static Bounds Encapsulate(this Bounds b, Capsule c)
         {
             b.Encapsulate(c.P0 + Vector3.one * c.Radius);
@@ -101,6 +117,9 @@ namespace XFG.Math.Shape
         /// Expands the AABB so that it fully contains the cylinder.
         /// Encapsulates both endpoints inflated by the cylinder radius.
         /// </summary>
+        /// <param name="b">The bounds to modify (passed by value).</param>
+        /// <param name="cy">The cylinder to contain.</param>
+        /// <returns>The grown bounds.</returns>
         public static Bounds Encapsulate(this Bounds b, Cylinder cy)
         {
             b.Encapsulate(cy.P0 + Vector3.one * cy.Radius);
@@ -114,6 +133,9 @@ namespace XFG.Math.Shape
         /// Expands the AABB so that it fully contains the cone.
         /// Encapsulates the apex and the base circle's extreme extents.
         /// </summary>
+        /// <param name="b">The bounds to modify (passed by value).</param>
+        /// <param name="cone">The cone to contain.</param>
+        /// <returns>The grown bounds.</returns>
         public static Bounds Encapsulate(this Bounds b, Cone cone)
         {
             b.Encapsulate(cone.Apex);
@@ -122,30 +144,33 @@ namespace XFG.Math.Shape
             return b;
         }
 
-        // ==========================================================================
-        // TRANSFORM
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Transform
+        // ---------------------------------------------------------------------
         /// <summary>
         /// Transforms the AABB by an arbitrary matrix.
-        /// 
+        /// </summary>
+        /// <remarks>
         /// Because an AABB must remain axis-aligned, the transformed box is computed
         /// by transforming the center and then computing new extents based on the
-        /// absolute contributions of each axis.
-        ///
-        /// This is the standard, stable method used in physics engines.
-        /// </summary>
+        /// absolute contributions of each axis. This is the standard, stable method
+        /// used in physics engines.
+        /// </remarks>
+        /// <param name="b">The bounds to transform.</param>
+        /// <param name="m">The transformation matrix.</param>
+        /// <returns>The axis-aligned bounds of the transformed box.</returns>
         public static Bounds Transform(this Bounds b, Matrix4x4 m)
         {
-            // Transform the center normally.
+            // Transform the center normally
             Vector3 c = m.MultiplyPoint3x4(b.center);
 
-            // Extract extents and matrix axes.
+            // Extract extents and matrix axes
             Vector3 ext = b.extents;
             Vector3 ax = m.GetColumn(0);
             Vector3 ay = m.GetColumn(1);
             Vector3 az = m.GetColumn(2);
 
-            // New extents are the sum of absolute contributions of each axis.
+            // New extents are the sum of absolute contributions of each axis
             Vector3 newExtents = new Vector3(
                 Mathf.Abs(ext.x * ax.x) + Mathf.Abs(ext.y * ay.x) + Mathf.Abs(ext.z * az.x),
                 Mathf.Abs(ext.x * ax.y) + Mathf.Abs(ext.y * ay.y) + Mathf.Abs(ext.z * az.y),

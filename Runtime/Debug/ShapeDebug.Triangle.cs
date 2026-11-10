@@ -1,21 +1,22 @@
 // Copyright (c) 2026 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
 
-// ------------------------------------------------------------------------------
-// ShapeDebug.Triangle
-// ------------------------------------------------------------------------------
-// Editor-only visualization helpers for triangle math.
-// ------------------------------------------------------------------------------
-//
 using UnityEngine;
 
 namespace XFG.Math.Shape
 {
+    /// <summary>
+    /// Editor-only visualization helpers for shapes. This part draws triangle math.
+    /// </summary>
     public static partial class ShapeDebug
     {
         /// <summary>
         /// Draws the triangle edges.
         /// </summary>
+        /// <param name="a">First triangle vertex.</param>
+        /// <param name="b">Second triangle vertex.</param>
+        /// <param name="c">Third triangle vertex.</param>
+        /// <param name="color">Line color.</param>
         public static void DrawTriangle(Vector3 a, Vector3 b, Vector3 c, Color color)
         {
 #if UNITY_EDITOR
@@ -29,6 +30,11 @@ namespace XFG.Math.Shape
         /// <summary>
         /// Draws the triangle normal at the centroid.
         /// </summary>
+        /// <param name="a">First triangle vertex.</param>
+        /// <param name="b">Second triangle vertex.</param>
+        /// <param name="c">Third triangle vertex.</param>
+        /// <param name="scale">Length of the drawn normal.</param>
+        /// <param name="color">Line color.</param>
         public static void DrawTriangleNormal(Vector3 a, Vector3 b, Vector3 c, float scale, Color color)
         {
 #if UNITY_EDITOR
@@ -41,8 +47,12 @@ namespace XFG.Math.Shape
         }
 
         /// <summary>
-        /// Draws barycentric axes from the triangle centroid.
+        /// Draws barycentric axes from the triangle centroid toward each vertex.
         /// </summary>
+        /// <param name="a">First triangle vertex (drawn in red).</param>
+        /// <param name="b">Second triangle vertex (drawn in green).</param>
+        /// <param name="c">Third triangle vertex (drawn in blue).</param>
+        /// <param name="scale">Length of each drawn axis.</param>
         public static void DrawTriangleBarycentricAxes(Vector3 a, Vector3 b, Vector3 c, float scale)
         {
 #if UNITY_EDITOR
@@ -60,8 +70,12 @@ namespace XFG.Math.Shape
         }
 
         /// <summary>
-        /// Draws the closest point from p to the triangle.
+        /// Draws the closest point from <paramref name="p"/> to the triangle.
         /// </summary>
+        /// <param name="p">Query point.</param>
+        /// <param name="a">First triangle vertex.</param>
+        /// <param name="b">Second triangle vertex.</param>
+        /// <param name="c">Third triangle vertex.</param>
         public static void DrawTriangleClosestPoint(Vector3 p, Vector3 a, Vector3 b, Vector3 c)
         {
 #if UNITY_EDITOR

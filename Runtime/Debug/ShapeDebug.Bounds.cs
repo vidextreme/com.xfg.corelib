@@ -1,24 +1,25 @@
 // Copyright (c) 2026 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
 
-// ------------------------------------------------------------------------------
-// ShapeDebug.Bounds
-// ------------------------------------------------------------------------------
-// Editor-only visualization helpers for:
-// - AABB (Unity Bounds)
-// - OBB (center, extents, rotation)
-// ------------------------------------------------------------------------------
-//
 using UnityEngine;
 
 namespace XFG.Math.Shape
 {
+    /// <summary>
+    /// Editor-only visualization helpers for shapes. This part draws bounding boxes.
+    /// </summary>
+    /// <remarks>
+    /// Covers:
+    /// <list type="bullet">
+    /// <item><description>AABB (Unity <see cref="Bounds"/>)</description></item>
+    /// <item><description>OBB (center, extents, rotation)</description></item>
+    /// </list>
+    /// </remarks>
     public static partial class ShapeDebug
     {
-        // ----------------------------------------------------------------------
+        // ---------------------------------------------------------------------
         // AABB
-        // ----------------------------------------------------------------------
-
+        // ---------------------------------------------------------------------
         /// <summary>
         /// Draws an axis-aligned bounding box.
         /// </summary>
@@ -32,10 +33,9 @@ namespace XFG.Math.Shape
 #endif
         }
 
-        // ----------------------------------------------------------------------
+        // ---------------------------------------------------------------------
         // OBB
-        // ----------------------------------------------------------------------
-
+        // ---------------------------------------------------------------------
         /// <summary>
         /// Draws an oriented bounding box.
         /// </summary>

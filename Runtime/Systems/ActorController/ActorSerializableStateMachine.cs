@@ -8,14 +8,13 @@ using XFG.AI.FSM.Serializable;
 namespace XFG.ActorController
 {
     /// <summary>
-    /// ActorSerializableStateMachine
-    ///
-    /// Serializable version of ActorStateMachine. Uses SerializeReference to
-    /// allow Unity to store polymorphic state classes while still using the
-    /// runtime FSM.
-    ///
-    /// Adds the same command-buffered behavior as the non-serializable version.
+    /// Serializable version of <see cref="ActorStateMachine{TMachineType, TStateIDType, TMessageType, TCommandType}"/>.
+    /// Uses <c>SerializeReference</c> so Unity can store polymorphic state classes
+    /// while still using the runtime FSM.
     /// </summary>
+    /// <remarks>
+    /// Adds the same command-buffered behavior as the non-serializable version.
+    /// </remarks>
     public abstract class ActorSerializableStateMachine<TMachineType, TStateIDType, TCommandType, TMessageType>
         : ISerializableStateMachine<TMachineType,
                                     ActorSerializableState<TMachineType, TStateIDType, TCommandType, TMessageType>,
@@ -35,17 +34,20 @@ namespace XFG.ActorController
         where TMessageType : IComparable
         where TCommandType : IComparable
     {
-        // ----------------------------------------------------------------------
-        // COMMAND BUFFER
-        // ----------------------------------------------------------------------
-
+        // ---------------------------------------------------------------------
+        // Command Buffer
+        // ---------------------------------------------------------------------
         private readonly CommandBuffer<TCommandType, object> _commandBuffer =
             new CommandBuffer<TCommandType, object>();
 
 
         /// <summary>
-        /// Enqueues a command issued by a Controller.
+        /// Enqueues a command issued by a Controller. Commands are processed
+        /// during <c>Update()</c>, not immediately.
         /// </summary>
+        /// <typeparam name="TParameterType">The type of the command parameter.</typeparam>
+        /// <param name="command">The command identifier.</param>
+        /// <param name="parameter">The command payload.</param>
         public void ExecuteCommand<TParameterType>(TCommandType command, TParameterType parameter)
         {
             _commandBuffer.Enqueue(command, parameter);
@@ -53,10 +55,11 @@ namespace XFG.ActorController
 
 
         /// <summary>
-        /// Unity Update Loop
-        ///
-        /// Identical to the non-serializable version.
+        /// Unity update loop. Ticks the FSM, then processes buffered commands.
         /// </summary>
+        /// <remarks>
+        /// Identical to the non-serializable version.
+        /// </remarks>
 #if UNITY_5_3_OR_NEWER
         protected virtual void Update()
         {
@@ -76,9 +79,10 @@ namespace XFG.ActorController
 
     /// <summary>
     /// Base class for all serializable Actor states.
-    ///
-    /// States must implement ExecuteCommand to handle incoming commands.
     /// </summary>
+    /// <remarks>
+    /// States must implement <c>ExecuteCommand</c> to handle incoming commands.
+    /// </remarks>
     [Serializable]
     public abstract class ActorSerializableState<TMachineType, TStateIDType, TCommandType, TMessageType>
         : ActorSerializableStateMachine<TMachineType, TStateIDType, TCommandType, TMessageType>.ISerializableState,
@@ -96,6 +100,12 @@ namespace XFG.ActorController
         where TMessageType : IComparable
         where TCommandType : IComparable
     {
+        /// <summary>
+        /// Handles a command routed to this state.
+        /// </summary>
+        /// <typeparam name="TParameterType">The type of the command parameter.</typeparam>
+        /// <param name="command">The command identifier.</param>
+        /// <param name="parameter">The command payload.</param>
         public abstract void ExecuteCommand<TParameterType>(TCommandType command, TParameterType parameter);
     }
 }

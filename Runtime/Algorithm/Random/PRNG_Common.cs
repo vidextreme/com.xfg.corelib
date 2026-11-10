@@ -7,6 +7,9 @@ namespace XFG.Algorithm
 {
     public static partial class Core
     {
+        /// <summary>
+        /// Global shared random number generator, seeded deterministically with a fixed value.
+        /// </summary>
         public static readonly IRandom Random = new XorShift128Plus(9001UL);
         #region SplitMix64
 
@@ -15,6 +18,8 @@ namespace XFG.Algorithm
         /// This function mutates the seed so each call produces a new,
         /// independent value. Commonly used to initialize PRNG state.
         /// </summary>
+        /// <param name="x">Seed state; advanced in place on every call.</param>
+        /// <returns>The next scrambled 64-bit value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ulong SplitMix64(ref ulong x)
         {
@@ -44,30 +49,40 @@ namespace XFG.Algorithm
         /// Returns a 32-bit unsigned integer.
         /// This is the fundamental output for most RNG algorithms.
         /// </summary>
+        /// <returns>The next 32-bit unsigned integer.</returns>
         uint NextUInt();
 
         /// <summary>
         /// Returns a float in the range [0, 1).
         /// Useful for normalized random values and probability checks.
         /// </summary>
+        /// <returns>A float in the range [0, 1).</returns>
         float NextFloat01();
 
         /// <summary>
         /// Returns a float in the range [min, max).
         /// Useful for continuous random ranges such as positions or speeds.
         /// </summary>
+        /// <param name="min">Inclusive lower bound.</param>
+        /// <param name="max">Exclusive upper bound.</param>
+        /// <returns>A float in the range [min, max).</returns>
         float NextFloat(float min, float max);
 
         /// <summary>
         /// Returns an integer in the range [0, maxExclusive).
         /// Useful for indexing into arrays or selecting random items.
         /// </summary>
+        /// <param name="maxExclusive">Exclusive upper bound; must be greater than zero.</param>
+        /// <returns>An integer in the range [0, maxExclusive).</returns>
         int NextInt(int maxExclusive);
 
         /// <summary>
         /// Returns an integer in the range [minInclusive, maxExclusive).
         /// Useful for bounded integer ranges such as levels or counts.
         /// </summary>
+        /// <param name="minInclusive">Inclusive lower bound.</param>
+        /// <param name="maxExclusive">Exclusive upper bound; must be greater than <paramref name="minInclusive"/>.</param>
+        /// <returns>An integer in the range [minInclusive, maxExclusive).</returns>
         int NextInt(int minInclusive, int maxExclusive);
     }
 

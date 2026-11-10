@@ -7,13 +7,16 @@ namespace XFG.ActorController
 {
     /// <summary>
     /// Represents an Actor capable of receiving typed commands.
-    /// Controllers call ExecuteCommand() to request actions.
-    /// 
-    /// This interface is intentionally minimal:
-    /// - Actors do not decide what to do.
-    /// - Actors only execute commands deterministically.
-    /// - All decision-making lives in Controllers.
+    /// Controllers call <c>ExecuteCommand()</c> to request actions.
     /// </summary>
+    /// <remarks>
+    /// This interface is intentionally minimal:
+    /// <list type="bullet">
+    /// <item>Actors do not decide what to do.</item>
+    /// <item>Actors only execute commands deterministically.</item>
+    /// <item>All decision-making lives in Controllers.</item>
+    /// </list>
+    /// </remarks>
     public interface IActor<TCommandType>
         where TCommandType : IComparable
     {
@@ -29,15 +32,17 @@ namespace XFG.ActorController
 
     /// <summary>
     /// Implemented by all Actor states that can receive commands.
-    /// 
+    /// </summary>
+    /// <remarks>
     /// This interface allows the FSM engine to remain generic while
     /// enabling each state to define its own command-handling logic.
-    /// 
     /// States should:
-    /// - Handle only the commands relevant to them.
-    /// - Trigger transitions when appropriate.
-    /// - Use Inform() to notify Controllers of events.
-    /// </summary>
+    /// <list type="bullet">
+    /// <item>Handle only the commands relevant to them.</item>
+    /// <item>Trigger transitions when appropriate.</item>
+    /// <item>Use <c>Inform()</c> to notify Controllers of events.</item>
+    /// </list>
+    /// </remarks>
     public interface IActorState<TCommandType>
     {
         /// <summary>

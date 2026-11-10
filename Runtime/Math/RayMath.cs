@@ -1,28 +1,34 @@
 // Copyright (c) 2026 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
-// ------------------------------------------------------------------------------
-// RayMath
-// ------------------------------------------------------------------------------
-// Math utilities for rays.
-//
-// Provides:
-// - Closest point on ray
-// - Distance to point
-// - Ray vs segment closest points
-// - Ray vs ray closest points
-//
-// All repeated property getters are cached.
-// ------------------------------------------------------------------------------
 
 using UnityEngine;
 
 namespace XFG.Math
 {
+    /// <summary>
+    /// Math utilities for rays.
+    /// </summary>
+    /// <remarks>
+    /// Provides:
+    /// <list type="bullet">
+    /// <item>Closest point on ray</item>
+    /// <item>Distance to point</item>
+    /// <item>Ray vs segment closest points</item>
+    /// <item>Ray vs ray closest points</item>
+    /// </list>
+    /// All repeated property getters are cached.
+    /// </remarks>
     public static class RayMath
     {
-        // ==========================================================================
-        // CLOSEST POINT ON RAY
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Closest Point on Ray
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Returns the point on the ray closest to the given point.
+        /// </summary>
+        /// <param name="ray">The ray.</param>
+        /// <param name="point">The query point.</param>
+        /// <returns>The closest point on the ray (the origin if the point lies behind it).</returns>
         public static Vector3 ClosestPoint(Ray ray, Vector3 point)
         {
             Vector3 o = ray.origin;
@@ -34,18 +40,32 @@ namespace XFG.Math
             return o + d * t;
         }
 
-        // ==========================================================================
-        // DISTANCE TO POINT
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Distance to Point
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Returns the distance from the ray to a point.
+        /// </summary>
+        /// <param name="ray">The ray.</param>
+        /// <param name="point">The query point.</param>
+        /// <returns>The distance between the point and its closest point on the ray.</returns>
         public static float DistanceToPoint(Ray ray, Vector3 point)
         {
             Vector3 cp = ClosestPoint(ray, point);
             return (cp - point).magnitude;
         }
 
-        // ==========================================================================
-        // RAY vs SEGMENT CLOSEST POINTS
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Ray vs Segment Closest Points
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Computes the closest pair of points between a ray and a segment.
+        /// </summary>
+        /// <param name="ray">The ray.</param>
+        /// <param name="s0">The segment start point.</param>
+        /// <param name="s1">The segment end point.</param>
+        /// <param name="rayPoint">The closest point on the ray.</param>
+        /// <param name="segPoint">The closest point on the segment.</param>
         public static void ClosestPoints(Ray ray, Vector3 s0, Vector3 s1, out Vector3 rayPoint, out Vector3 segPoint)
         {
             Vector3 o = ray.origin;
@@ -82,9 +102,16 @@ namespace XFG.Math
             segPoint = s0 + u * s;
         }
 
-        // ==========================================================================
-        // RAY vs RAY CLOSEST POINTS
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Ray vs Ray Closest Points
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Computes the closest pair of points between two rays.
+        /// </summary>
+        /// <param name="a">The first ray.</param>
+        /// <param name="b">The second ray.</param>
+        /// <param name="pA">The closest point on ray <paramref name="a"/>.</param>
+        /// <param name="pB">The closest point on ray <paramref name="b"/>.</param>
         public static void ClosestPoints(Ray a, Ray b, out Vector3 pA, out Vector3 pB)
         {
             Vector3 o1 = a.origin;

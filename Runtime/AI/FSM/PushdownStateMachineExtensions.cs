@@ -1,32 +1,29 @@
-// ------------------------------------------------------------------------------
 // Copyright (c) 2026 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
-// ------------------------------------------------------------------------------
-//
-// PushdownStateMachineExtensions
-// Stack-based state transitions for IStateMachine.
-//
-// This module adds pushdown (stack-driven) behavior on top of the base FSM
-// without modifying the core IStateMachine implementation. It enables temporary
-// overlays, interruptible states, nested UI flows, and clean return-to-previous
-// behavior.
-//
-// The pushdown layer is implemented entirely as extension methods. Each machine
-// instance maintains its own stack of paused states. Only the top state is
-// active; all others remain suspended until popped.
-//
-// ------------------------------------------------------------------------------
 
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace XFG.AI.FSM.Pushdown
 {
+    /// <summary>
+    /// Stack-based state transitions for IStateMachine.
+    /// </summary>
+    /// <remarks>
+    /// This module adds pushdown (stack-driven) behavior on top of the base FSM
+    /// without modifying the core IStateMachine implementation. It enables temporary
+    /// overlays, interruptible states, nested UI flows, and clean return-to-previous
+    /// behavior.
+    ///
+    /// The pushdown layer is implemented entirely as extension methods. Each machine
+    /// instance maintains its own stack of paused states. Only the top state is
+    /// active; all others remain suspended until popped.
+    /// </remarks>
     public static class PushdownStateMachineExtensions
     {
-        // ----------------------------------------------------------------------
-        // INTERNAL STACK STORAGE
-        // ----------------------------------------------------------------------
+        // ---------------------------------------------------------------------
+        // Internal Stack Storage
+        // ---------------------------------------------------------------------
         // Each machine instance gets its own stack. The dictionary key is the
         // machine reference, and the value is a stack of TStateID entries.
         //
@@ -34,8 +31,6 @@ namespace XFG.AI.FSM.Pushdown
         // - No modification to the base FSM class
         // - Multiple FSM instances can coexist safely
         // - Stack lifetime matches the machine lifetime
-        // ----------------------------------------------------------------------
-
         private static readonly Dictionary<object, Stack<object>> _stateStacks =
             new Dictionary<object, Stack<object>>();
 
@@ -49,14 +44,20 @@ namespace XFG.AI.FSM.Pushdown
             return stack;
         }
 
-        // ----------------------------------------------------------------------
-        // PUSH STATE
-        // ----------------------------------------------------------------------
-        // Saves the current state on the stack, then transitions into the new
-        // state. This is the core pushdown operation used for overlays such as
-        // Pause, Inventory, Dialogue, etc.
-        // ----------------------------------------------------------------------
-
+        // ---------------------------------------------------------------------
+        // Push State
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Saves the current state on the stack, then transitions into the new state.
+        /// This is the core pushdown operation used for overlays such as Pause, Inventory, Dialogue, etc.
+        /// </summary>
+        /// <typeparam name="TMachine">The concrete machine component type.</typeparam>
+        /// <typeparam name="TStateID">The state identifier type.</typeparam>
+        /// <typeparam name="TMessage">The message identifier type.</typeparam>
+        /// <param name="machine">The state machine to transition.</param>
+        /// <param name="nextState">The ID of the state to enter.</param>
+        /// <param name="args">Arguments forwarded to the transition callbacks.</param>
+        /// <returns>True if the transition happened; otherwise false.</returns>
         public static bool PushState<TMachine, TStateID, TMessage>(
             this IStateMachine<TMachine, TStateID, TMessage> machine,
             TStateID nextState,
@@ -73,14 +74,19 @@ namespace XFG.AI.FSM.Pushdown
             return machine.ChangeState(nextState, args);
         }
 
-        // ----------------------------------------------------------------------
-        // POP STATE
-        // ----------------------------------------------------------------------
-        // Restores the previous state from the stack. If the stack is empty,
-        // nothing happens. This is the inverse of PushState and is used to
-        // resume gameplay or return to the previous overlay.
-        // ----------------------------------------------------------------------
-
+        // ---------------------------------------------------------------------
+        // Pop State
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Restores the previous state from the stack. If the stack is empty, nothing happens.
+        /// This is the inverse of PushState and is used to resume gameplay or return to the previous overlay.
+        /// </summary>
+        /// <typeparam name="TMachine">The concrete machine component type.</typeparam>
+        /// <typeparam name="TStateID">The state identifier type.</typeparam>
+        /// <typeparam name="TMessage">The message identifier type.</typeparam>
+        /// <param name="machine">The state machine to transition.</param>
+        /// <param name="args">Arguments forwarded to the transition callbacks.</param>
+        /// <returns>True if a state was popped and the transition happened; otherwise false.</returns>
         public static bool PopState<TMachine, TStateID, TMessage>(
             this IStateMachine<TMachine, TStateID, TMessage> machine,
             params object[] args)
@@ -97,13 +103,17 @@ namespace XFG.AI.FSM.Pushdown
             return machine.ChangeState(previous, args);
         }
 
-        // ----------------------------------------------------------------------
-        // CLEAR STACK
-        // ----------------------------------------------------------------------
-        // Removes all paused states. Useful when resetting gameplay, loading a
-        // new scene, or ensuring no stale states remain.
-        // ----------------------------------------------------------------------
-
+        // ---------------------------------------------------------------------
+        // Clear Stack
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Removes all paused states. Useful when resetting gameplay, loading a
+        /// new scene, or ensuring no stale states remain.
+        /// </summary>
+        /// <typeparam name="TMachine">The concrete machine component type.</typeparam>
+        /// <typeparam name="TStateID">The state identifier type.</typeparam>
+        /// <typeparam name="TMessage">The message identifier type.</typeparam>
+        /// <param name="machine">The state machine whose stack to clear.</param>
         public static void ClearStateStack<TMachine, TStateID, TMessage>(
             this IStateMachine<TMachine, TStateID, TMessage> machine)
             where TMachine : MonoBehaviour
@@ -113,14 +123,21 @@ namespace XFG.AI.FSM.Pushdown
             GetStack(machine).Clear();
         }
 
-        // ----------------------------------------------------------------------
-        // REPLACE STATE
-        // ----------------------------------------------------------------------
-        // Replaces the active state without modifying the stack. This is useful
-        // for switching overlays (Pause -> Settings) while preserving the return
-        // path (Settings -> Pause -> Gameplay).
-        // ----------------------------------------------------------------------
-
+        // ---------------------------------------------------------------------
+        // Replace State
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Replaces the active state without modifying the stack. This is useful
+        /// for switching overlays (Pause -&gt; Settings) while preserving the return
+        /// path (Settings -&gt; Pause -&gt; Gameplay).
+        /// </summary>
+        /// <typeparam name="TMachine">The concrete machine component type.</typeparam>
+        /// <typeparam name="TStateID">The state identifier type.</typeparam>
+        /// <typeparam name="TMessage">The message identifier type.</typeparam>
+        /// <param name="machine">The state machine to transition.</param>
+        /// <param name="newState">The ID of the state to enter.</param>
+        /// <param name="args">Arguments forwarded to the transition callbacks.</param>
+        /// <returns>True if the transition happened; otherwise false.</returns>
         public static bool ReplaceState<TMachine, TStateID, TMessage>(
             this IStateMachine<TMachine, TStateID, TMessage> machine,
             TStateID newState,
@@ -135,13 +152,18 @@ namespace XFG.AI.FSM.Pushdown
             return machine.ChangeState(newState, args);
         }
 
-        // ----------------------------------------------------------------------
-        // PEEK STATE
-        // ----------------------------------------------------------------------
-        // Returns the state that would be restored by PopState(), without
-        // removing it from the stack. Useful for UI previews or debugging.
-        // ----------------------------------------------------------------------
-
+        // ---------------------------------------------------------------------
+        // Peek State
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Returns the state that would be restored by PopState(), without
+        /// removing it from the stack. Useful for UI previews or debugging.
+        /// </summary>
+        /// <typeparam name="TMachine">The concrete machine component type.</typeparam>
+        /// <typeparam name="TStateID">The state identifier type.</typeparam>
+        /// <typeparam name="TMessage">The message identifier type.</typeparam>
+        /// <param name="machine">The state machine to query.</param>
+        /// <returns>The top paused state ID, or the default value if the stack is empty.</returns>
         public static TStateID PeekState<TMachine, TStateID, TMessage>(
             this IStateMachine<TMachine, TStateID, TMessage> machine)
             where TMachine : MonoBehaviour
@@ -156,13 +178,18 @@ namespace XFG.AI.FSM.Pushdown
             return (TStateID)stack.Peek();
         }
 
-        // ----------------------------------------------------------------------
-        // STACK DEPTH
-        // ----------------------------------------------------------------------
-        // Returns the number of paused states currently stored. This is useful
-        // for debugging, UI indicators, or validating nested flows.
-        // ----------------------------------------------------------------------
-
+        // ---------------------------------------------------------------------
+        // Stack Depth
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Returns the number of paused states currently stored. This is useful
+        /// for debugging, UI indicators, or validating nested flows.
+        /// </summary>
+        /// <typeparam name="TMachine">The concrete machine component type.</typeparam>
+        /// <typeparam name="TStateID">The state identifier type.</typeparam>
+        /// <typeparam name="TMessage">The message identifier type.</typeparam>
+        /// <param name="machine">The state machine to query.</param>
+        /// <returns>The number of paused states on the stack.</returns>
         public static int StackDepth<TMachine, TStateID, TMessage>(
             this IStateMachine<TMachine, TStateID, TMessage> machine)
             where TMachine : MonoBehaviour
@@ -172,18 +199,24 @@ namespace XFG.AI.FSM.Pushdown
             return GetStack(machine).Count;
         }
 
-        // ----------------------------------------------------------------------
-        // REPLACE TOP AND PUSH
-        // ----------------------------------------------------------------------
-        // Pushes the current state onto the stack, then replaces the active
-        // state with a new one. This is useful for nested overlays such as:
-        //
-        // Pause -> Settings -> Controls -> Back -> Settings -> Pop -> Gameplay
-        //
-        // It preserves the full return path while allowing the top state to be
-        // replaced cleanly.
-        // ----------------------------------------------------------------------
-
+        // ---------------------------------------------------------------------
+        // Replace Top And Push
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Pushes the current state onto the stack, then replaces the active
+        /// state with a new one, preserving the full return path.
+        /// </summary>
+        /// <remarks>
+        /// Useful for nested overlays such as:
+        /// Pause -&gt; Settings -&gt; Controls -&gt; Back -&gt; Settings -&gt; Pop -&gt; Gameplay.
+        /// </remarks>
+        /// <typeparam name="TMachine">The concrete machine component type.</typeparam>
+        /// <typeparam name="TStateID">The state identifier type.</typeparam>
+        /// <typeparam name="TMessage">The message identifier type.</typeparam>
+        /// <param name="machine">The state machine to transition.</param>
+        /// <param name="newState">The ID of the state to enter.</param>
+        /// <param name="args">Arguments forwarded to the transition callbacks.</param>
+        /// <returns>True if the transition happened; otherwise false.</returns>
         public static bool ReplaceTopAndPush<TMachine, TStateID, TMessage>(
             this IStateMachine<TMachine, TStateID, TMessage> machine,
             TStateID newState,

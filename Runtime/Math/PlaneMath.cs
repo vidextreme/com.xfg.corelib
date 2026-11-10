@@ -1,32 +1,38 @@
 // Copyright (c) 2026 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
-// ------------------------------------------------------------------------------
-// PlaneMath
-// ------------------------------------------------------------------------------
-// Low-level math utilities for planes.
-//
-// Provides:
-// - Construction from point/normal or 3 points
-// - Normalization
-// - Signed distance
-// - Projection
-// - Ray/segment intersection
-// - Plane flipping
-// - Plane-plane intersection
-// - AABB/OBB classification
-//
-// All methods are deterministic, allocation-free, and suitable for Burst jobs.
-// ------------------------------------------------------------------------------
 
 using UnityEngine;
 
 namespace XFG.Math.Shape
 {
+    /// <summary>
+    /// Low-level math utilities for planes.
+    /// </summary>
+    /// <remarks>
+    /// Provides:
+    /// <list type="bullet">
+    /// <item>Construction from point/normal or 3 points</item>
+    /// <item>Normalization</item>
+    /// <item>Signed distance</item>
+    /// <item>Projection</item>
+    /// <item>Ray/segment intersection</item>
+    /// <item>Plane flipping</item>
+    /// <item>Plane-plane intersection</item>
+    /// <item>AABB/OBB classification</item>
+    /// </list>
+    /// All methods are deterministic, allocation-free, and suitable for Burst jobs.
+    /// </remarks>
     public static class PlaneMath
     {
-        // ==========================================================================
-        // CONSTRUCTION
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Construction
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Builds a plane that passes through a point with the given normal.
+        /// </summary>
+        /// <param name="point">A point on the plane.</param>
+        /// <param name="normal">The plane normal; it is normalized internally.</param>
+        /// <returns>The resulting plane.</returns>
         public static Plane FromPointNormal(Vector3 point, Vector3 normal)
         {
             Vector3 n = normal.normalized;
@@ -34,6 +40,13 @@ namespace XFG.Math.Shape
             return new Plane(n, d);
         }
 
+        /// <summary>
+        /// Builds a plane through three points, with the normal following the winding a, b, c.
+        /// </summary>
+        /// <param name="a">The first point.</param>
+        /// <param name="b">The second point.</param>
+        /// <param name="c">The third point.</param>
+        /// <returns>The resulting plane.</returns>
         public static Plane FromPoints(Vector3 a, Vector3 b, Vector3 c)
         {
             Vector3 n = Vector3.Cross(b - a, c - a).normalized;
@@ -41,9 +54,14 @@ namespace XFG.Math.Shape
             return new Plane(n, d);
         }
 
-        // ==========================================================================
-        // NORMALIZATION
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Normalization
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Rescales the plane so its normal has unit length.
+        /// </summary>
+        /// <param name="p">The plane to normalize.</param>
+        /// <returns>The normalized plane, or <paramref name="p"/> unchanged if its normal is near zero.</returns>
         public static Plane Normalize(Plane p)
         {
             Vector3 n = p.normal;
@@ -56,9 +74,15 @@ namespace XFG.Math.Shape
             return new Plane(n * inv, p.distance * inv);
         }
 
-        // ==========================================================================
-        // SIGNED DISTANCE
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Signed Distance
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Returns the signed distance from the plane to a point.
+        /// </summary>
+        /// <param name="p">The plane.</param>
+        /// <param name="point">The query point.</param>
+        /// <returns>Positive on the normal side, negative on the other side.</returns>
         public static float DistanceToPoint(Plane p, Vector3 point)
         {
             Vector3 n = p.normal;
@@ -66,9 +90,15 @@ namespace XFG.Math.Shape
             return Vector3.Dot(n, point) + d;
         }
 
-        // ==========================================================================
-        // PROJECTION
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Projection
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Projects a point onto the plane.
+        /// </summary>
+        /// <param name="p">The plane.</param>
+        /// <param name="point">The point to project.</param>
+        /// <returns>The projected point on the plane.</returns>
         public static Vector3 ProjectPoint(Plane p, Vector3 point)
         {
             Vector3 n = p.normal;
@@ -77,9 +107,17 @@ namespace XFG.Math.Shape
             return point - n * dist;
         }
 
-        // ==========================================================================
-        // RAY INTERSECTION
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Ray Intersection
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Intersects a ray with the plane.
+        /// </summary>
+        /// <param name="p">The plane.</param>
+        /// <param name="origin">The ray origin.</param>
+        /// <param name="dir">The ray direction.</param>
+        /// <param name="t">The ray parameter of the hit point.</param>
+        /// <returns><c>true</c> if the ray hits the plane at or in front of its origin.</returns>
         public static bool Raycast(Plane p, Vector3 origin, Vector3 dir, out float t)
         {
             t = 0f;
@@ -97,9 +135,17 @@ namespace XFG.Math.Shape
             return t >= 0f;
         }
 
-        // ==========================================================================
-        // SEGMENT INTERSECTION
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Segment Intersection
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Intersects the segment ab with the plane.
+        /// </summary>
+        /// <param name="p">The plane.</param>
+        /// <param name="a">The segment start point.</param>
+        /// <param name="b">The segment end point.</param>
+        /// <param name="hit">The intersection point, if any.</param>
+        /// <returns><c>true</c> if the segment crosses the plane.</returns>
         public static bool SegmentIntersect(Plane p, Vector3 a, Vector3 b, out Vector3 hit)
         {
             hit = Vector3.zero;
@@ -121,9 +167,14 @@ namespace XFG.Math.Shape
             return true;
         }
 
-        // ==========================================================================
-        // FLIP
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Flip
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Returns the same plane facing the opposite direction.
+        /// </summary>
+        /// <param name="p">The plane to flip.</param>
+        /// <returns>The flipped plane.</returns>
         public static Plane Flip(Plane p)
         {
             Vector3 n = p.normal;
@@ -131,9 +182,17 @@ namespace XFG.Math.Shape
             return new Plane(-n, -d);
         }
 
-        // ==========================================================================
-        // PLANE-PLANE INTERSECTION
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Plane-Plane Intersection
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Computes the line where two planes intersect.
+        /// </summary>
+        /// <param name="a">The first plane.</param>
+        /// <param name="b">The second plane.</param>
+        /// <param name="point">A point on the intersection line.</param>
+        /// <param name="dir">The (unnormalized) direction of the intersection line.</param>
+        /// <returns><c>true</c> if the planes intersect; <c>false</c> if they are parallel.</returns>
         public static bool Intersect(Plane a, Plane b, out Vector3 point, out Vector3 dir)
         {
             point = Vector3.zero;
@@ -157,9 +216,15 @@ namespace XFG.Math.Shape
             return true;
         }
 
-        // ==========================================================================
-        // AABB CLASSIFICATION
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // AABB Classification
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Classifies an axis-aligned box against the plane.
+        /// </summary>
+        /// <param name="p">The plane.</param>
+        /// <param name="b">The axis-aligned bounding box.</param>
+        /// <returns>+1 if fully in front, -1 if fully behind, 0 if it straddles the plane.</returns>
         public static int ClassifyAABB(Plane p, Bounds b)
         {
             Vector3 n = p.normal;
@@ -180,9 +245,15 @@ namespace XFG.Math.Shape
             return 0;
         }
 
-        // ==========================================================================
-        // OBB CLASSIFICATION
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // OBB Classification
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Classifies an oriented box against the plane.
+        /// </summary>
+        /// <param name="p">The plane.</param>
+        /// <param name="b">The oriented bounding box.</param>
+        /// <returns>+1 if fully in front, -1 if fully behind, 0 if it straddles the plane.</returns>
         public static int ClassifyOBB(Plane p, OBB b)
         {
             Vector3 n = p.normal;

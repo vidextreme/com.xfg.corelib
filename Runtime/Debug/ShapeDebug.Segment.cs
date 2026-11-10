@@ -1,10 +1,6 @@
 // Copyright (c) 2026 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
 
-// ------------------------------------------------------------------------------
-// ShapeDebug.Segment
-// ------------------------------------------------------------------------------
-//
 using UnityEngine;
 
 namespace XFG.Math.Shape
@@ -12,8 +8,11 @@ namespace XFG.Math.Shape
     public static partial class ShapeDebug
     {
         /// <summary>
-        /// Draws a segment between p0 and p1.
+        /// Draws a segment between <paramref name="p0"/> and <paramref name="p1"/>.
         /// </summary>
+        /// <param name="p0">Segment start point.</param>
+        /// <param name="p1">Segment end point.</param>
+        /// <param name="color">Line color.</param>
         public static void DrawSegment(Vector3 p0, Vector3 p1, Color color)
         {
 #if UNITY_EDITOR
@@ -23,8 +22,11 @@ namespace XFG.Math.Shape
         }
 
         /// <summary>
-        /// Draws the closest point from q to the segment.
+        /// Draws the closest point from <paramref name="q"/> to the segment.
         /// </summary>
+        /// <param name="p0">Segment start point.</param>
+        /// <param name="p1">Segment end point.</param>
+        /// <param name="q">Query point.</param>
         public static void DrawSegmentClosestPoint(Vector3 p0, Vector3 p1, Vector3 q)
         {
 #if UNITY_EDITOR

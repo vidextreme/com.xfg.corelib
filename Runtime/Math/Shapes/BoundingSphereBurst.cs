@@ -7,22 +7,51 @@ using Unity.Mathematics;
 
 namespace XFG.Math.ShapeBurst
 {
+    /// <summary>
+    /// A Burst-friendly sphere packed into a single <see cref="float4"/>.
+    /// </summary>
     public struct BoundingSphereSimd
     {
-        // xyz = center, w = radius
+        /// <summary>
+        /// Packed sphere data: xyz = center, w = radius.
+        /// </summary>
         public float4 data;
 
+        /// <summary>
+        /// The sphere center.
+        /// </summary>
         public readonly float3 Center => data.xyz;
+
+        /// <summary>
+        /// The sphere radius; negative for an empty sphere.
+        /// </summary>
         public readonly float Radius => data.w;
 
+        /// <summary>
+        /// Creates a sphere.
+        /// </summary>
+        /// <param name="center">The sphere center.</param>
+        /// <param name="radius">The sphere radius.</param>
         public BoundingSphereSimd(float3 center, float radius)
         {
             data = new float4(center, radius);
         }
 
+        /// <summary>
+        /// An empty sphere (negative radius) that contains no points.
+        /// </summary>
         public static BoundingSphereSimd Empty => new BoundingSphereSimd(new float3(0f), -1f);
+
+        /// <summary>
+        /// Whether this sphere is empty (negative radius).
+        /// </summary>
         public readonly bool IsEmpty => data.w < 0f;
 
+        /// <summary>
+        /// Returns whether a point lies inside the sphere, within a small tolerance.
+        /// </summary>
+        /// <param name="p">The point to test.</param>
+        /// <returns><c>true</c> if the point is inside or on the sphere.</returns>
         public bool Contains(float3 p)
         {
             float3 d = p - data.xyz;
@@ -32,28 +61,41 @@ namespace XFG.Math.ShapeBurst
         }
     }
 
+    /// <summary>
+    /// Burst-compatible computation of the exact minimal enclosing sphere of a point set.
+    /// </summary>
     [BurstCompile]
     public static class MinimalEnclosingSphereBurst
     {
+        /// <summary>
+        /// Tolerance used when testing whether a point lies inside a sphere.
+        /// </summary>
         public const float EPSILON_CONTAIN = 1e-6f;
+
+        /// <summary>
+        /// Threshold below which a configuration of points is treated as degenerate.
+        /// </summary>
         public const float EPSILON_DEGENERATE = 1e-12f;
 
         /// <summary>
         /// Computes the exact minimal enclosing sphere for a set of 3D points.
-        /// 
+        /// </summary>
+        /// <remarks>
         /// This is a non-recursive, SIMD-friendly implementation of Welzl's algorithm.
         /// It incrementally builds the minimal sphere by iterating over points and
         /// promoting them into the boundary set when they lie outside the current sphere.
-        /// 
-        /// Key properties:
-        /// - Exact solution (not an approximation)
-        /// - Deterministic (no randomization unless added externally)
-        /// - Burst-compatible (no recursion, no unsafe, no allocations)
-        /// - Uses SIMD-leaning float4 math for efficient distance and update operations
-        /// 
+        /// <para>Key properties:</para>
+        /// <list type="bullet">
+        /// <item>Exact solution (not an approximation)</item>
+        /// <item>Deterministic (no randomization unless added externally)</item>
+        /// <item>Burst-compatible (no recursion, no unsafe, no allocations)</item>
+        /// <item>Uses SIMD-leaning float4 math for efficient distance and update operations</item>
+        /// </list>
         /// Expected performance is O(n) for typical point distributions, with a worst-case
-        /// O(n^4) boundary promotion pattern - but in practice this is extremely rare.
-        /// </summary>
+        /// O(n^4) boundary promotion pattern, but in practice this is extremely rare.
+        /// </remarks>
+        /// <param name="points">The points to enclose.</param>
+        /// <returns>The minimal enclosing sphere, or a zero-radius sphere at the origin if empty.</returns>
         public static BoundingSphereSimd Compute(NativeArray<float3> points)
         {
             int count = points.Length;

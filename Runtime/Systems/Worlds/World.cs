@@ -38,12 +38,16 @@ namespace XFG.Worlds
         /// <summary>
         /// Gets a world-level subsystem instance by its type.
         /// </summary>
+        /// <typeparam name="T">The subsystem instance type.</typeparam>
+        /// <returns>The instance, or null if not found.</returns>
         public T GetSubsystem<T>() where T : class =>
             _worldSubsystems.TryGetValue(typeof(T), out var v) ? (T)v : null;
 
         /// <summary>
         /// Advances all tickable world-level subsystems by the given delta time.
+        /// Does nothing while paused.
         /// </summary>
+        /// <param name="dt">Time elapsed since the last tick, in seconds.</param>
         internal void Tick(float dt)
         {
             if (_paused) return;
@@ -54,7 +58,9 @@ namespace XFG.Worlds
 
         /// <summary>
         /// Advances all fixed-tick world-level subsystems by the given fixed delta time.
+        /// Does nothing while paused.
         /// </summary>
+        /// <param name="fdt">The fixed timestep, in seconds.</param>
         internal void FixedTick(float fdt)
         {
             if (_paused) return;

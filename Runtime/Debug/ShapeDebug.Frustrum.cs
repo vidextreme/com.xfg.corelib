@@ -1,10 +1,6 @@
 // Copyright (c) 2026 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
 
-// ------------------------------------------------------------------------------
-// ShapeDebug.Frustum
-// ------------------------------------------------------------------------------
-//
 using UnityEngine;
 
 namespace XFG.Math.Shape
@@ -14,6 +10,8 @@ namespace XFG.Math.Shape
         /// <summary>
         /// Draws the normals of each frustum plane.
         /// </summary>
+        /// <param name="planes">Frustum planes to draw; nothing is drawn if null.</param>
+        /// <param name="scale">Length of each drawn normal.</param>
         public static void DrawFrustumPlanes(Plane[] planes, float scale)
         {
 #if UNITY_EDITOR

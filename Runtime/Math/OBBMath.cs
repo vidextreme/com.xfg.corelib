@@ -1,27 +1,33 @@
 // Copyright (c) 2026 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
-// ------------------------------------------------------------------------------
-// OBBMath
-// ------------------------------------------------------------------------------
-// Math utilities for oriented bounding boxes.
-//
-// Provides:
-// - Closest point
-// - Distance to point
-// - Projection onto axes
-//
-// All repeated property getters are cached.
-// ------------------------------------------------------------------------------
 
 using UnityEngine;
 
 namespace XFG.Math.Shape
 {
+    /// <summary>
+    /// Math utilities for oriented bounding boxes.
+    /// </summary>
+    /// <remarks>
+    /// Provides:
+    /// <list type="bullet">
+    /// <item>Closest point</item>
+    /// <item>Distance to point</item>
+    /// <item>Projection onto axes</item>
+    /// </list>
+    /// All repeated property getters are cached.
+    /// </remarks>
     public static class OBBMath
     {
-        // ==========================================================================
-        // CLOSEST POINT
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Closest Point
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Returns the point on or inside the box closest to the given point.
+        /// </summary>
+        /// <param name="b">The oriented bounding box.</param>
+        /// <param name="point">The query point in world space.</param>
+        /// <returns>The closest point on or inside the box.</returns>
         public static Vector3 ClosestPoint(OBB b, Vector3 point)
         {
             Vector3 c = b.Center;
@@ -39,18 +45,30 @@ namespace XFG.Math.Shape
             return c + r * x + u * y + f * z;
         }
 
-        // ==========================================================================
-        // DISTANCE TO POINT
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Distance to Point
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Returns the distance from the box to a point (zero if the point is inside).
+        /// </summary>
+        /// <param name="b">The oriented bounding box.</param>
+        /// <param name="point">The query point in world space.</param>
+        /// <returns>The distance from the box surface to the point, or zero if inside.</returns>
         public static float DistanceToPoint(OBB b, Vector3 point)
         {
             Vector3 cp = ClosestPoint(b, point);
             return (cp - point).magnitude;
         }
 
-        // ==========================================================================
-        // PROJECT EXTENTS ONTO AXIS
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Project Extents onto Axis
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Returns the projected half-length (radius) of the box onto an axis.
+        /// </summary>
+        /// <param name="b">The oriented bounding box.</param>
+        /// <param name="axis">The axis to project onto; normalize it for a true length.</param>
+        /// <returns>The half-length of the box's projection onto the axis.</returns>
         public static float ProjectExtent(OBB b, Vector3 axis)
         {
             Vector3 e = b.Extents;

@@ -1,30 +1,35 @@
 // Copyright (c) 2026 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
-// ------------------------------------------------------------------------------
-// CylinderExtensions
-// ------------------------------------------------------------------------------
-// Extension methods for Cylinder providing:
-// - Point containment
-// - Shape containment (Sphere, Capsule, Cylinder, Cone)
-// - Deterministic, allocation-free geometric helpers
-//
-// All methods are suitable for Burst jobs and runtime gameplay systems.
-// ------------------------------------------------------------------------------
 
 using UnityEngine;
 
 namespace XFG.Math.Shape
 {
+    /// <summary>
+    /// Containment extension methods for <see cref="Cylinder"/>.
+    /// </summary>
+    /// <remarks>
+    /// Provides:
+    /// <list type="bullet">
+    /// <item>Point containment</item>
+    /// <item>Shape containment (Sphere, Capsule, Cylinder, Cone)</item>
+    /// <item>Deterministic, allocation-free geometric helpers</item>
+    /// </list>
+    /// All methods are suitable for Burst jobs and runtime gameplay systems.
+    /// </remarks>
     public static class CylinderExtensions
     {
-        // ==============================================================================
-        // CONTAINS POINT
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Contains Point
+        // ---------------------------------------------------------------------
         #region ContainsPoint
 
         /// <summary>
         /// Returns true if the cylinder contains the point.
         /// </summary>
+        /// <param name="cy">The cylinder.</param>
+        /// <param name="p">The point to test.</param>
+        /// <returns><c>true</c> if the point is inside or on the cylinder.</returns>
         public static bool Contains(this Cylinder cy, Vector3 p)
         {
             Vector3 axis = cy.P1 - cy.P0;
@@ -39,14 +44,17 @@ namespace XFG.Math.Shape
 
         #endregion
 
-        // ==============================================================================
-        // CONTAINS SPHERE
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Contains Sphere
+        // ---------------------------------------------------------------------
         #region ContainsSphere
 
         /// <summary>
         /// Returns true if the cylinder fully contains the sphere.
         /// </summary>
+        /// <param name="cy">The containing cylinder.</param>
+        /// <param name="s">The sphere to test.</param>
+        /// <returns><c>true</c> if the sphere is fully inside.</returns>
         public static bool Contains(this Cylinder cy, Sphere s)
         {
             float innerRadius = cy.Radius - s.Radius;
@@ -65,14 +73,17 @@ namespace XFG.Math.Shape
 
         #endregion
 
-        // ==============================================================================
-        // CONTAINS CAPSULE
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Contains Capsule
+        // ---------------------------------------------------------------------
         #region ContainsCapsule
 
         /// <summary>
         /// Returns true if the cylinder fully contains the capsule.
         /// </summary>
+        /// <param name="cy">The containing cylinder.</param>
+        /// <param name="c">The capsule to test.</param>
+        /// <returns><c>true</c> if the capsule is fully inside.</returns>
         public static bool Contains(this Cylinder cy, Capsule c)
         {
             float innerRadius = cy.Radius - c.Radius;
@@ -93,14 +104,17 @@ namespace XFG.Math.Shape
 
         #endregion
 
-        // ==============================================================================
-        // CONTAINS CYLINDER
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Contains Cylinder
+        // ---------------------------------------------------------------------
         #region ContainsCylinder
 
         /// <summary>
         /// Returns true if this cylinder fully contains another cylinder.
         /// </summary>
+        /// <param name="cy">The containing cylinder.</param>
+        /// <param name="other">The cylinder to test.</param>
+        /// <returns><c>true</c> if <paramref name="other"/> is fully inside (cap centers tested only).</returns>
         public static bool Contains(this Cylinder cy, Cylinder other)
         {
             float innerRadius = cy.Radius - other.Radius;
@@ -121,14 +135,17 @@ namespace XFG.Math.Shape
 
         #endregion
 
-        // ==============================================================================
-        // CONTAINS CONE
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Contains Cone
+        // ---------------------------------------------------------------------
         #region ContainsCone
 
         /// <summary>
         /// Returns true if the cylinder fully contains the cone.
         /// </summary>
+        /// <param name="cy">The containing cylinder.</param>
+        /// <param name="cone">The cone to test.</param>
+        /// <returns><c>true</c> if the cone is fully inside (apex and base center tested only).</returns>
         public static bool Contains(this Cylinder cy, Cone cone)
         {
             float innerRadius = cy.Radius - cone.Radius;

@@ -35,7 +35,7 @@ namespace XFG
 
         /// <summary>
         /// Declares which subsystem assets exist at each runtime scope.
-        /// Must be assigned before InitializeEngine is called.
+        /// Must be assigned before <see cref="InitializeEngine"/> is called.
         /// </summary>
         public static SubsystemRegistry Registry
         {
@@ -73,6 +73,7 @@ namespace XFG
         /// <summary>
         /// Creates a new world group and initializes all group-level subsystems.
         /// </summary>
+        /// <returns>The newly created world group.</returns>
         public static WorldGroup CreateWorldGroup()
         {
             var sorted = SubsystemManager.Sort(_registry.GroupSubsystems);
@@ -92,6 +93,7 @@ namespace XFG
         /// Advances all tickable subsystems and world groups by the given delta time.
         /// Also steps fixed-timestep updates as needed.
         /// </summary>
+        /// <param name="dt">Time elapsed since the last tick, in seconds.</param>
         public static void Tick(float dt)
         {
             foreach (var instance in _engineSubsystems.Values)
@@ -111,6 +113,7 @@ namespace XFG
         /// <summary>
         /// Advances all fixed-tick subsystems and world groups by the given fixed delta time.
         /// </summary>
+        /// <param name="fdt">The fixed timestep, in seconds.</param>
         private static void FixedTick(float fdt)
         {
             foreach (var instance in _engineSubsystems.Values)

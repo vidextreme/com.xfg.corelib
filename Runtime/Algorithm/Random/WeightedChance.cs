@@ -1,11 +1,20 @@
+// Copyright (c) 2026 John David Uy
+// Licensed under the MIT License. See LICENSE for details.
+
 using System;
 
 namespace XFG.Algorithm
 {
     public static partial class Core
     {
+        /// <summary>
+        /// An item that can be selected by weighted random rolls.
+        /// </summary>
         public interface IWeighted
         {
+            /// <summary>
+            /// Relative selection weight; must not be negative.
+            /// </summary>
             float Weight { get; }
         }
 
@@ -33,6 +42,7 @@ namespace XFG.Algorithm
         /// <param name="items">A span of weighted items.</param>
         /// <param name="rng">The random number generator to use.</param>
         /// <returns>The selected item.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when the span is empty, a weight is negative, or the total weight is zero.</exception>
         public static T RollWeightedChance<T>(ReadOnlySpan<T> items, IRandom rng)
             where T : IWeighted
         {
@@ -67,7 +77,7 @@ namespace XFG.Algorithm
                 r -= w;
             }
 
-            // Fallback for floating point drift
+            // Fallback for floating-point drift
             return items[^1];
         }
 

@@ -1,29 +1,37 @@
 // Copyright (c) 2026 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
-// ------------------------------------------------------------------------------
-// AABBCollisionExtensions
-// ------------------------------------------------------------------------------
-// Collision tests for axis-aligned bounding boxes (AABB).
-//
-// Provides:
-// - AABB vs AABB
-// - AABB vs Sphere
-// - AABB vs Capsule
-// - AABB vs Cylinder
-// - AABB vs Segment
-// - AABB vs Triangle
-// - AABB vs OBB (delegates to OBB SAT)
-// ------------------------------------------------------------------------------
 
 using UnityEngine;
 
 namespace XFG.Math.Shape
 {
+    /// <summary>
+    /// Collision tests for axis-aligned bounding boxes (AABB).
+    /// </summary>
+    /// <remarks>
+    /// Provides:
+    /// <list type="bullet">
+    /// <item>AABB vs AABB</item>
+    /// <item>AABB vs Sphere</item>
+    /// <item>AABB vs Capsule</item>
+    /// <item>AABB vs Cylinder</item>
+    /// <item>AABB vs Cone</item>
+    /// <item>AABB vs Segment</item>
+    /// <item>AABB vs Triangle</item>
+    /// <item>AABB vs OBB (delegates to OBB SAT)</item>
+    /// </list>
+    /// </remarks>
     public static class AABBCollisionExtensions
     {
-        // ==========================================================================
+        // ---------------------------------------------------------------------
         // AABB vs AABB
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Tests whether two AABBs overlap.
+        /// </summary>
+        /// <param name="a">The first box.</param>
+        /// <param name="b">The second box.</param>
+        /// <returns><c>true</c> if the shapes overlap.</returns>
         public static bool Intersects(Bounds a, Bounds b)
         {
             Vector3 aMin = a.min;
@@ -38,9 +46,16 @@ namespace XFG.Math.Shape
             return true;
         }
 
-        // ==========================================================================
-        // AABB vs SPHERE
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // AABB vs Sphere
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Tests whether an AABB overlaps a sphere.
+        /// </summary>
+        /// <param name="a">The axis-aligned bounding box.</param>
+        /// <param name="sphereCenter">The sphere center.</param>
+        /// <param name="sphereRadius">The sphere radius.</param>
+        /// <returns><c>true</c> if the shapes overlap.</returns>
         public static bool Intersects(Bounds a, Vector3 sphereCenter, float sphereRadius)
         {
             Vector3 c = a.center;
@@ -57,9 +72,15 @@ namespace XFG.Math.Shape
             return (closest - sphereCenter).sqrMagnitude <= sphereRadius * sphereRadius;
         }
 
-        // ==========================================================================
-        // AABB vs CAPSULE
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // AABB vs Capsule
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Tests whether an AABB overlaps a capsule (approximate).
+        /// </summary>
+        /// <param name="a">The axis-aligned bounding box.</param>
+        /// <param name="capsule">The capsule.</param>
+        /// <returns><c>true</c> if the shapes overlap.</returns>
         public static bool Intersects(Bounds a, Capsule capsule)
         {
             Vector3 p0 = capsule.P0;
@@ -73,9 +94,15 @@ namespace XFG.Math.Shape
                    (closest - p1).sqrMagnitude <= rSq;
         }
 
-        // ==========================================================================
-        // AABB vs CYLINDER
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // AABB vs Cylinder
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Tests whether an AABB overlaps a cylinder (approximate).
+        /// </summary>
+        /// <param name="a">The axis-aligned bounding box.</param>
+        /// <param name="cy">The cylinder.</param>
+        /// <returns><c>true</c> if the shapes overlap.</returns>
         public static bool Intersects(Bounds a, Cylinder cy)
         {
             Vector3 p0 = cy.P0;
@@ -89,13 +116,19 @@ namespace XFG.Math.Shape
                    (closest - p1).sqrMagnitude <= rSq;
         }
 
-        // ==========================================================================
-        // AABB vs CONE
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // AABB vs Cone
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Tests whether an AABB overlaps a cone, using the box point closest to the apex.
+        /// </summary>
+        /// <param name="a">The axis-aligned bounding box.</param>
+        /// <param name="cone">The cone.</param>
+        /// <returns><c>true</c> if the shapes overlap.</returns>
         public static bool Intersects(Bounds a, Cone cone)
         {
             Vector3 apex = cone.Apex;
-            Vector3 axis = cone.Axis;      // must be normalized
+            Vector3 axis = cone.Axis;      // Must be normalized
             float height = cone.Height;
             float radius = cone.Radius;
 
@@ -121,10 +154,16 @@ namespace XFG.Math.Shape
             return radial.sqrMagnitude <= rAtH * rAtH;
         }
 
-
-        // ==========================================================================
-        // AABB vs SEGMENT
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // AABB vs Segment
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Tests whether a segment intersects an AABB using the slab method.
+        /// </summary>
+        /// <param name="a">The axis-aligned bounding box.</param>
+        /// <param name="s0">The segment start point.</param>
+        /// <param name="s1">The segment end point.</param>
+        /// <returns><c>true</c> if the segment touches the box.</returns>
         public static bool Intersects(Bounds a, Vector3 s0, Vector3 s1)
         {
             Vector3 dir = s1 - s0;
@@ -156,9 +195,17 @@ namespace XFG.Math.Shape
             return tmax >= 0f && tmin <= 1f && tmin <= tmax;
         }
 
-        // ==========================================================================
-        // AABB vs TRIANGLE
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // AABB vs Triangle
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Tests whether a triangle overlaps an AABB using the separating axis theorem.
+        /// </summary>
+        /// <param name="a">The axis-aligned bounding box.</param>
+        /// <param name="A">Triangle vertex A.</param>
+        /// <param name="B">Triangle vertex B.</param>
+        /// <param name="C">Triangle vertex C.</param>
+        /// <returns><c>true</c> if the shapes overlap.</returns>
         public static bool Intersects(Bounds a, Vector3 A, Vector3 B, Vector3 C)
         {
             Vector3 triMin = Vector3.Min(A, Vector3.Min(B, C));
@@ -243,9 +290,15 @@ namespace XFG.Math.Shape
             return !(max < -r || min > r);
         }
 
-        // ==========================================================================
+        // ---------------------------------------------------------------------
         // AABB vs OBB
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Tests whether an AABB overlaps an OBB by treating the AABB as an axis-aligned OBB.
+        /// </summary>
+        /// <param name="a">The axis-aligned bounding box.</param>
+        /// <param name="b">The oriented bounding box.</param>
+        /// <returns><c>true</c> if the shapes overlap.</returns>
         public static bool Intersects(Bounds a, OBB b)
         {
             OBB aa = new OBB(

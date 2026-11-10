@@ -1,12 +1,6 @@
 ﻿// Copyright (c) 2026 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
 
-// UIElements popup window providing a searchable hierarchical tree of types.
-// Custom row template removes Unity's default label and replaces it with an
-// icon + label row. Uses SerializableClassAttribute icon metadata when
-// present, falling back to Unity's default type icon. Rows collapse cleanly
-// when no icon is available (no leftover spacing).
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +11,15 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using static XFG.Core;
 
+/// <summary>
+/// UIElements popup window providing a searchable hierarchical tree of types.
+/// </summary>
+/// <remarks>
+/// A custom row template replaces Unity's default label with an icon + label row.
+/// Icons come from <see cref="SerializableClassAttribute"/> metadata when present,
+/// falling back to Unity's default type icon. Rows collapse cleanly when no icon
+/// is available (no leftover spacing).
+/// </remarks>
 public class SearchableTypeTreePopup : EditorWindow
 {
     Action<Type> _onSelected;
@@ -26,9 +29,15 @@ public class SearchableTypeTreePopup : EditorWindow
     TextField _searchField;
     TreeView _treeView;
 
-    // ---------------------------------------------------------------------
-    // Show popup
-    // ---------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // Show Popup
+    // -------------------------------------------------------------------------
+    /// <summary>
+    /// Shows the popup as a dropdown anchored to the activator rectangle.
+    /// </summary>
+    /// <param name="activatorRect">The rectangle the dropdown is anchored to.</param>
+    /// <param name="types">The selectable types; <c>null</c> shows an empty tree.</param>
+    /// <param name="onSelected">Called with the chosen type before the popup closes.</param>
     public static void Show(Rect activatorRect, IEnumerable<Type> types, Action<Type> onSelected)
     {
         var wnd = CreateInstance<SearchableTypeTreePopup>();
@@ -37,15 +46,15 @@ public class SearchableTypeTreePopup : EditorWindow
         wnd._filteredTypes = wnd._allTypes;
         wnd._onSelected = onSelected;
 
-        // Build tree BEFORE UIElements binds rows
+        // Build the tree before UIElements binds rows
         wnd.RebuildTree(wnd._filteredTypes);
 
         wnd.ShowAsDropDown(activatorRect, new Vector2(350f, 500f));
     }
 
-    // ---------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Initialize UI
-    // ---------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     void OnEnable()
     {
         var root = rootVisualElement;
@@ -60,9 +69,9 @@ public class SearchableTypeTreePopup : EditorWindow
         _treeView = new TreeView();
         _treeView.selectionType = SelectionType.Single;
 
-        // -----------------------------------------------------------------
-        // Custom row template: icon + label
-        // -----------------------------------------------------------------
+        // ---------------------------------------------------------------------
+        // Custom Row Template: Icon + Label
+        // ---------------------------------------------------------------------
         _treeView.makeItem = () =>
         {
             var row = new VisualElement();
@@ -86,9 +95,9 @@ public class SearchableTypeTreePopup : EditorWindow
             return row;
         };
 
-        // -----------------------------------------------------------------
-        // Bind row: icon + label (with no-icon spacing collapse)
-        // -----------------------------------------------------------------
+        // ---------------------------------------------------------------------
+        // Bind Row: Icon + Label (Collapse Spacing When No Icon)
+        // ---------------------------------------------------------------------
         _treeView.bindItem = (element, index) =>
         {
             var item = _treeView.GetItemDataForIndex<TreeItem>(index);
@@ -132,9 +141,9 @@ public class SearchableTypeTreePopup : EditorWindow
             }
         };
 
-        // -----------------------------------------------------------------
+        // ---------------------------------------------------------------------
         // Selection
-        // -----------------------------------------------------------------
+        // ---------------------------------------------------------------------
         _treeView.onItemsChosen += items =>
         {
             foreach (var obj in items)
@@ -151,13 +160,13 @@ public class SearchableTypeTreePopup : EditorWindow
 
         root.Add(_treeView);
 
-        // Secondary safety net
+        // Rebuild again as a safety net
         RebuildTree(_filteredTypes);
     }
 
-    // ---------------------------------------------------------------------
-    // Search filter
-    // ---------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // Search Filter
+    // -------------------------------------------------------------------------
     void ApplyFilter(string filter)
     {
         if (string.IsNullOrWhiteSpace(filter))
@@ -178,9 +187,9 @@ public class SearchableTypeTreePopup : EditorWindow
         RebuildTree(_filteredTypes);
     }
 
-    // ---------------------------------------------------------------------
-    // Build tree hierarchy
-    // ---------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // Build Tree Hierarchy
+    // -------------------------------------------------------------------------
     void RebuildTree(List<Type> types)
     {
         if (types == null)
@@ -236,9 +245,9 @@ public class SearchableTypeTreePopup : EditorWindow
         _treeView.Rebuild();
     }
 
-    // ---------------------------------------------------------------------
-    // Tree node
-    // ---------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // Tree Node
+    // -------------------------------------------------------------------------
     class TreeItem
     {
         public string DisplayName;

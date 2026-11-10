@@ -1,25 +1,27 @@
 // Copyright (c) 2026 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
-// ------------------------------------------------------------------------------
-// ConeExtensions
-// ------------------------------------------------------------------------------
-// Extension methods for Cone providing:
-// - Point containment
-// - Shape containment (Sphere, Capsule, Cylinder, Cone)
-// - Deterministic, allocation-free geometric helpers
-//
-// All methods are suitable for Burst jobs and runtime gameplay systems.
-// ------------------------------------------------------------------------------
 
 using UnityEngine;
 
 namespace XFG.Math.Shape
 {
+    /// <summary>
+    /// Containment extension methods for <see cref="Cone"/>.
+    /// </summary>
+    /// <remarks>
+    /// Provides:
+    /// <list type="bullet">
+    /// <item>Point containment</item>
+    /// <item>Shape containment (Sphere, Capsule, Cylinder, Cone)</item>
+    /// <item>Deterministic, allocation-free geometric helpers</item>
+    /// </list>
+    /// All methods are suitable for Burst jobs and runtime gameplay systems.
+    /// </remarks>
     public static class ConeExtensions
     {
-        // ==============================================================================
-        // INTERNAL HELPERS
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Internal Helpers
+        // ---------------------------------------------------------------------
         #region Helpers
 
         /// <summary>
@@ -45,14 +47,17 @@ namespace XFG.Math.Shape
 
         #endregion
 
-        // ==============================================================================
-        // CONTAINS POINT
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Contains Point
+        // ---------------------------------------------------------------------
         #region ContainsPoint
 
         /// <summary>
         /// Returns true if the cone contains the point.
         /// </summary>
+        /// <param name="cone">The cone.</param>
+        /// <param name="p">The point to test.</param>
+        /// <returns><c>true</c> if the point is inside or on the cone.</returns>
         public static bool Contains(this Cone cone, Vector3 p)
         {
             Vector3 axisPoint = cone.ClosestPointOnConeAxis(p);
@@ -63,14 +68,17 @@ namespace XFG.Math.Shape
 
         #endregion
 
-        // ==============================================================================
-        // CONTAINS SPHERE
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Contains Sphere
+        // ---------------------------------------------------------------------
         #region ContainsSphere
 
         /// <summary>
         /// Returns true if the cone fully contains the sphere.
         /// </summary>
+        /// <param name="cone">The containing cone.</param>
+        /// <param name="s">The sphere to test.</param>
+        /// <returns><c>true</c> if the sphere is fully inside.</returns>
         public static bool Contains(this Cone cone, Sphere s)
         {
             Vector3 axisPoint = cone.ClosestPointOnConeAxis(s.Center);
@@ -85,14 +93,17 @@ namespace XFG.Math.Shape
 
         #endregion
 
-        // ==============================================================================
-        // CONTAINS CAPSULE
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Contains Capsule
+        // ---------------------------------------------------------------------
         #region ContainsCapsule
 
         /// <summary>
         /// Returns true if the cone fully contains the capsule.
         /// </summary>
+        /// <param name="cone">The containing cone.</param>
+        /// <param name="c">The capsule to test.</param>
+        /// <returns><c>true</c> if the capsule is fully inside.</returns>
         public static bool Contains(this Cone cone, Capsule c)
         {
             Vector3 p0Axis = cone.ClosestPointOnConeAxis(c.P0);
@@ -110,14 +121,17 @@ namespace XFG.Math.Shape
 
         #endregion
 
-        // ==============================================================================
-        // CONTAINS CYLINDER
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Contains Cylinder
+        // ---------------------------------------------------------------------
         #region ContainsCylinder
 
         /// <summary>
         /// Returns true if the cone fully contains the cylinder.
         /// </summary>
+        /// <param name="cone">The containing cone.</param>
+        /// <param name="cy">The cylinder to test.</param>
+        /// <returns><c>true</c> if the cylinder is fully inside (cap centers tested only).</returns>
         public static bool Contains(this Cone cone, Cylinder cy)
         {
             Vector3 p0Axis = cone.ClosestPointOnConeAxis(cy.P0);
@@ -135,14 +149,17 @@ namespace XFG.Math.Shape
 
         #endregion
 
-        // ==============================================================================
-        // CONTAINS CONE
-        // ==============================================================================
+        // ---------------------------------------------------------------------
+        // Contains Cone
+        // ---------------------------------------------------------------------
         #region ContainsCone
 
         /// <summary>
         /// Returns true if this cone fully contains another cone.
         /// </summary>
+        /// <param name="cone">The containing cone.</param>
+        /// <param name="other">The cone to test.</param>
+        /// <returns><c>true</c> if <paramref name="other"/> is fully inside (apex and base tested only).</returns>
         public static bool Contains(this Cone cone, Cone other)
         {
             Vector3 apexAxis = cone.ClosestPointOnConeAxis(other.Apex);

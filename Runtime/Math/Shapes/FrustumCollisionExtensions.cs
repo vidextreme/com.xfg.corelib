@@ -1,33 +1,41 @@
 // Copyright (c) 2026 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
-// ------------------------------------------------------------------------------
-// FrustumCollisionExtensions
-// ------------------------------------------------------------------------------
-// Collision predicates for Frustum vs:
-// - Point
-// - Sphere
-// - Capsule
-// - Cylinder
-// - Cone
-// - AABB
-// - OBB
-// - Triangle
-// - Ray
-// - Segment
-// - Frustum
-//
-// All methods are deterministic, allocation-free, and suitable for Burst jobs.
-// ------------------------------------------------------------------------------
 
 using UnityEngine;
 
 namespace XFG.Math.Shape
 {
+    /// <summary>
+    /// Collision predicates for <see cref="Frustum"/> against other shapes.
+    /// </summary>
+    /// <remarks>
+    /// Supported shapes:
+    /// <list type="bullet">
+    /// <item>Point</item>
+    /// <item>Sphere</item>
+    /// <item>Capsule</item>
+    /// <item>Cylinder</item>
+    /// <item>Cone</item>
+    /// <item>AABB</item>
+    /// <item>OBB</item>
+    /// <item>Triangle</item>
+    /// <item>Ray</item>
+    /// <item>Segment</item>
+    /// <item>Frustum</item>
+    /// </list>
+    /// All methods are deterministic, allocation-free, and suitable for Burst jobs.
+    /// </remarks>
     public static class FrustumCollisionExtensions
     {
-        // ==========================================================================
-        // POINT
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Point
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Returns whether a point lies inside the frustum.
+        /// </summary>
+        /// <param name="f">The frustum.</param>
+        /// <param name="p">The point to test.</param>
+        /// <returns><c>true</c> if the point is on the inner side of all six planes.</returns>
         public static bool ContainsPoint(this Frustum f, Vector3 p)
         {
             for (int i = 0; i < 6; i++)
@@ -39,9 +47,15 @@ namespace XFG.Math.Shape
             return true;
         }
 
-        // ==========================================================================
-        // SPHERE
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Sphere
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Tests whether a sphere is inside or overlaps the frustum.
+        /// </summary>
+        /// <param name="f">The frustum.</param>
+        /// <param name="s">The sphere.</param>
+        /// <returns><c>true</c> if the shape is inside or overlaps the frustum (conservative).</returns>
         public static bool Intersects(this Frustum f, Sphere s)
         {
             Vector3 c = s.Center;
@@ -59,9 +73,15 @@ namespace XFG.Math.Shape
             return true;
         }
 
-        // ==========================================================================
-        // CAPSULE
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Capsule
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Tests whether a capsule is inside or overlaps the frustum.
+        /// </summary>
+        /// <param name="f">The frustum.</param>
+        /// <param name="cap">The capsule.</param>
+        /// <returns><c>true</c> if the shape is inside or overlaps the frustum (conservative).</returns>
         public static bool Intersects(this Frustum f, Capsule cap)
         {
             if (f.Intersects(new Sphere(cap.P0, cap.Radius))) return true;
@@ -70,9 +90,15 @@ namespace XFG.Math.Shape
             return f.IntersectsSegment(cap.P0, cap.P1);
         }
 
-        // ==========================================================================
-        // CYLINDER
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Cylinder
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Tests whether a cylinder is inside or overlaps the frustum (approximated as a capsule).
+        /// </summary>
+        /// <param name="f">The frustum.</param>
+        /// <param name="cy">The cylinder.</param>
+        /// <returns><c>true</c> if the shape is inside or overlaps the frustum (conservative).</returns>
         public static bool Intersects(this Frustum f, Cylinder cy)
         {
             if (f.Intersects(new Sphere(cy.P0, cy.Radius))) return true;
@@ -81,9 +107,15 @@ namespace XFG.Math.Shape
             return f.IntersectsSegment(cy.P0, cy.P1);
         }
 
-        // ==========================================================================
-        // CONE
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Cone
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Tests whether a cone is inside or overlaps the frustum (approximate).
+        /// </summary>
+        /// <param name="f">The frustum.</param>
+        /// <param name="cone">The cone.</param>
+        /// <returns><c>true</c> if the shape is inside or overlaps the frustum (conservative).</returns>
         public static bool Intersects(this Frustum f, Cone cone)
         {
             if (f.ContainsPoint(cone.Apex))
@@ -99,9 +131,15 @@ namespace XFG.Math.Shape
             return f.Intersects(new Sphere(mid, r));
         }
 
-        // ==========================================================================
+        // ---------------------------------------------------------------------
         // AABB
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Tests whether an axis-aligned box is inside or overlaps the frustum.
+        /// </summary>
+        /// <param name="f">The frustum.</param>
+        /// <param name="b">The axis-aligned bounding box.</param>
+        /// <returns><c>true</c> if the shape is inside or overlaps the frustum (conservative).</returns>
         public static bool IntersectsAABB(this Frustum f, Bounds b)
         {
             Vector3 c = b.center;
@@ -126,9 +164,15 @@ namespace XFG.Math.Shape
             return true;
         }
 
-        // ==========================================================================
+        // ---------------------------------------------------------------------
         // OBB
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Tests whether an oriented box is inside or overlaps the frustum.
+        /// </summary>
+        /// <param name="f">The frustum.</param>
+        /// <param name="b">The oriented bounding box.</param>
+        /// <returns><c>true</c> if the shape is inside or overlaps the frustum (conservative).</returns>
         public static bool IntersectsOBB(this Frustum f, OBB b)
         {
             Vector3 center = b.Center;
@@ -156,9 +200,17 @@ namespace XFG.Math.Shape
             return true;
         }
 
-        // ==========================================================================
-        // TRIANGLE
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Triangle
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Tests whether a triangle is inside or overlaps the frustum.
+        /// </summary>
+        /// <param name="f">The frustum.</param>
+        /// <param name="a">Triangle vertex A.</param>
+        /// <param name="b">Triangle vertex B.</param>
+        /// <param name="c">Triangle vertex C.</param>
+        /// <returns><c>true</c> if the shape is inside or overlaps the frustum (conservative).</returns>
         public static bool IntersectsTriangle(this Frustum f, Vector3 a, Vector3 b, Vector3 c)
         {
             for (int i = 0; i < 6; i++)
@@ -176,9 +228,16 @@ namespace XFG.Math.Shape
             return true;
         }
 
-        // ==========================================================================
-        // RAY
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Ray
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Tests whether a ray passes through the frustum by clipping it against each plane.
+        /// </summary>
+        /// <param name="f">The frustum.</param>
+        /// <param name="origin">The ray origin.</param>
+        /// <param name="dir">The ray direction.</param>
+        /// <returns><c>true</c> if part of the ray lies within the frustum.</returns>
         public static bool IntersectsRay(this Frustum f, Vector3 origin, Vector3 dir)
         {
             float tMin = 0f;
@@ -217,9 +276,16 @@ namespace XFG.Math.Shape
             return true;
         }
 
-        // ==========================================================================
-        // SEGMENT
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Segment
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Tests whether a segment passes through the frustum by clipping it against each plane.
+        /// </summary>
+        /// <param name="f">The frustum.</param>
+        /// <param name="a">The segment start point.</param>
+        /// <param name="b">The segment end point.</param>
+        /// <returns><c>true</c> if part of the segment lies within the frustum.</returns>
         public static bool IntersectsSegment(this Frustum f, Vector3 a, Vector3 b)
         {
             Vector3 ab = b - a;
@@ -260,9 +326,18 @@ namespace XFG.Math.Shape
             return true;
         }
 
-        // ==========================================================================
-        // FRUSTUM vs FRUSTUM
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Frustum vs Frustum
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Tests whether two frustums overlap by checking each one's planes against the other's corners.
+        /// </summary>
+        /// <remarks>
+        /// Allocates a temporary 8-element corner array.
+        /// </remarks>
+        /// <param name="a">The first frustum.</param>
+        /// <param name="b">The second frustum.</param>
+        /// <returns><c>true</c> if no separating plane was found.</returns>
         public static bool IntersectsFrustum(this Frustum a, Frustum b)
         {
             // Test A's planes against B's corners

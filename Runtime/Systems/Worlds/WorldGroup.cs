@@ -43,12 +43,16 @@ namespace XFG.Worlds
         /// <summary>
         /// Gets a group-level subsystem instance by its type.
         /// </summary>
+        /// <typeparam name="T">The subsystem instance type.</typeparam>
+        /// <returns>The instance, or null if not found.</returns>
         public T GetSubsystem<T>() where T : class =>
             _groupSubsystems.TryGetValue(typeof(T), out var v) ? (T)v : null;
 
         /// <summary>
         /// Creates a new world within this group and initializes all world-level subsystems.
         /// </summary>
+        /// <param name="registry">The registry that declares the world-level subsystem assets.</param>
+        /// <returns>The newly created world.</returns>
         public World CreateWorld(SubsystemRegistry registry)
         {
             var sorted = SubsystemManager.Sort(registry.WorldSubsystems);
@@ -64,6 +68,11 @@ namespace XFG.Worlds
             return world;
         }
 
+        /// <summary>
+        /// Advances group-level subsystems, then all worlds in this group.
+        /// Does nothing while paused.
+        /// </summary>
+        /// <param name="dt">Time elapsed since the last tick, in seconds.</param>
         internal void Tick(float dt)
         {
             if (_paused) return;
@@ -75,6 +84,11 @@ namespace XFG.Worlds
                 world.Tick(dt);
         }
 
+        /// <summary>
+        /// Advances fixed-tick group-level subsystems, then all worlds in this group.
+        /// Does nothing while paused.
+        /// </summary>
+        /// <param name="fdt">The fixed timestep, in seconds.</param>
         internal void FixedTick(float fdt)
         {
             if (_paused) return;
@@ -86,6 +100,9 @@ namespace XFG.Worlds
                 world.FixedTick(fdt);
         }
 
+        /// <summary>
+        /// Deinitializes all worlds in this group, then the group-level subsystems.
+        /// </summary>
         internal void Deinitialize()
         {
             foreach (var world in _worlds)

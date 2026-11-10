@@ -5,7 +5,7 @@ namespace XFG.Subsystems
 {
     /// <summary>
     /// Defines subsystem ordering categories.
-    /// These values act as base offsets for StartupOrderAttribute.
+    /// These values act as base offsets for <see cref="StartupOrderAttribute"/>.
     /// </summary>
     public enum SubsystemCategory
     {

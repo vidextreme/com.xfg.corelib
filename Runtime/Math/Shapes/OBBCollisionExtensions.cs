@@ -1,28 +1,34 @@
 // Copyright (c) 2026 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
-// ------------------------------------------------------------------------------
-// OBBCollisionExtensions
-// ------------------------------------------------------------------------------
-// Collision tests for oriented bounding boxes (OBB).
-//
-// Implements:
-// - OBB vs OBB (SAT)
-// - OBB vs AABB
-// - OBB vs Sphere
-//
-// All repeated property getters are cached.
-// All methods are deterministic, allocation-free, and Burst-friendly.
-// ------------------------------------------------------------------------------
 
 using UnityEngine;
 
 namespace XFG.Math.Shape
 {
+    /// <summary>
+    /// Collision tests for oriented bounding boxes (OBB).
+    /// </summary>
+    /// <remarks>
+    /// Implements:
+    /// <list type="bullet">
+    /// <item>OBB vs OBB (SAT)</item>
+    /// <item>OBB vs AABB</item>
+    /// <item>OBB vs Sphere</item>
+    /// </list>
+    /// All repeated property getters are cached.
+    /// All methods are deterministic, allocation-free, and Burst-friendly.
+    /// </remarks>
     public static class OBBCollisionExtensions
     {
-        // ==========================================================================
+        // ---------------------------------------------------------------------
         // OBB vs OBB (SAT)
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Tests whether two OBBs overlap using the separating axis theorem (15 axes).
+        /// </summary>
+        /// <param name="a">The first box.</param>
+        /// <param name="b">The second box.</param>
+        /// <returns><c>true</c> if the boxes overlap.</returns>
         public static bool Intersects(OBB a, OBB b)
         {
             // Cache A
@@ -73,7 +79,7 @@ namespace XFG.Math.Shape
             float tA1 = Vector3.Dot(t, aU);
             float tA2 = Vector3.Dot(t, aF);
 
-            // --- Test A's axes -----------------------------------------------------
+            // Test A's axes
             if (Mathf.Abs(tA0) > aE.x + bE.x * abs00 + bE.y * abs01 + bE.z * abs02)
                 return false;
 
@@ -83,7 +89,7 @@ namespace XFG.Math.Shape
             if (Mathf.Abs(tA2) > aE.z + bE.x * abs20 + bE.y * abs21 + bE.z * abs22)
                 return false;
 
-            // --- Test B's axes -----------------------------------------------------
+            // Test B's axes
             float tB0 = Mathf.Abs(Vector3.Dot(t, bR));
             float tB1 = Mathf.Abs(Vector3.Dot(t, bU));
             float tB2 = Mathf.Abs(Vector3.Dot(t, bF));
@@ -97,7 +103,7 @@ namespace XFG.Math.Shape
             if (tB2 > bE.z + aE.x * abs02 + aE.y * abs12 + aE.z * abs22)
                 return false;
 
-            // --- Test cross axes ---------------------------------------------------
+            // Test cross axes
             // A0 x B0
             if (Mathf.Abs(tA2 * r10 - tA1 * r20) >
                 aE.y * abs20 + aE.z * abs10 + bE.y * abs02 + bE.z * abs01)
@@ -146,9 +152,15 @@ namespace XFG.Math.Shape
             return true;
         }
 
-        // ==========================================================================
+        // ---------------------------------------------------------------------
         // OBB vs AABB
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Tests whether an OBB overlaps an AABB by treating the AABB as an axis-aligned OBB.
+        /// </summary>
+        /// <param name="a">The oriented bounding box.</param>
+        /// <param name="b">The axis-aligned bounding box.</param>
+        /// <returns><c>true</c> if the boxes overlap.</returns>
         public static bool Intersects(OBB a, Bounds b)
         {
             // Convert AABB to OBB with identity orientation
@@ -163,9 +175,16 @@ namespace XFG.Math.Shape
             return Intersects(a, bb);
         }
 
-        // ==========================================================================
+        // ---------------------------------------------------------------------
         // OBB vs Sphere
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Tests whether an OBB overlaps a sphere.
+        /// </summary>
+        /// <param name="b">The oriented bounding box.</param>
+        /// <param name="sphereCenter">The sphere center.</param>
+        /// <param name="sphereRadius">The sphere radius.</param>
+        /// <returns><c>true</c> if the shapes overlap.</returns>
         public static bool Intersects(OBB b, Vector3 sphereCenter, float sphereRadius)
         {
             // Cache OBB

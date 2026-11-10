@@ -1,30 +1,35 @@
 // Copyright (c) 2026 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
-// ------------------------------------------------------------------------------
-// FrustumMath
-// ------------------------------------------------------------------------------
-// Low-level math utilities for view frustums.
-//
-// Provides:
-// - Construction from Camera
-// - Construction from planes
-// - Extraction of frustum corners
-// - AABB/OBB classification
-// - Point, ray, and segment tests
-// - Frustum vs frustum overlap
-//
-// All methods are deterministic, allocation-free, and suitable for Burst jobs.
-// ------------------------------------------------------------------------------
 
 using UnityEngine;
 
 namespace XFG.Math.Shape
 {
+    /// <summary>
+    /// Low-level math utilities for view frustums.
+    /// </summary>
+    /// <remarks>
+    /// Provides:
+    /// <list type="bullet">
+    /// <item>Construction from a <see cref="Camera"/></item>
+    /// <item>Construction from planes</item>
+    /// <item>Extraction of frustum corners</item>
+    /// <item>AABB/OBB classification</item>
+    /// <item>Point, ray, and segment tests</item>
+    /// <item>Frustum vs frustum overlap</item>
+    /// </list>
+    /// All methods are deterministic, allocation-free, and suitable for Burst jobs.
+    /// </remarks>
     public static class FrustumMath
     {
-        // ==========================================================================
-        // FACTORY: FROM CAMERA
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Factory: From Camera
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Builds a frustum from the view planes of a camera.
+        /// </summary>
+        /// <param name="cam">The camera whose frustum planes are used.</param>
+        /// <returns>The camera's view frustum.</returns>
         public static Frustum FromCamera(Camera cam)
         {
             Plane[] planes = GeometryUtility.CalculateFrustumPlanes(cam);
@@ -40,9 +45,19 @@ namespace XFG.Math.Shape
             };
         }
 
-        // ==========================================================================
-        // FACTORY: FROM PLANES
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Factory: From Planes
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Builds a frustum from six explicit planes.
+        /// </summary>
+        /// <param name="left">The left clipping plane.</param>
+        /// <param name="right">The right clipping plane.</param>
+        /// <param name="bottom">The bottom clipping plane.</param>
+        /// <param name="top">The top clipping plane.</param>
+        /// <param name="near">The near clipping plane.</param>
+        /// <param name="far">The far clipping plane.</param>
+        /// <returns>A frustum made of the given planes.</returns>
         public static Frustum FromPlanes(
             Plane left, Plane right, Plane bottom,
             Plane top, Plane near, Plane far)
@@ -58,9 +73,19 @@ namespace XFG.Math.Shape
             };
         }
 
-        // ==========================================================================
-        // CORNERS
-        // ==========================================================================
+        // ---------------------------------------------------------------------
+        // Corners
+        // ---------------------------------------------------------------------
+        /// <summary>
+        /// Computes the eight corner points of the frustum.
+        /// </summary>
+        /// <remarks>
+        /// Order: near bottom-left, near bottom-right, near top-left, near top-right,
+        /// then the same four for the far plane. Corners of degenerate (parallel)
+        /// plane triples are written as <see cref="Vector3.zero"/>.
+        /// </remarks>
+        /// <param name="f">The frustum.</param>
+        /// <param name="outCorners">Destination array; must hold at least 8 elements.</param>
         public static void GetCorners(this Frustum f, Vector3[] outCorners)
         {
             Intersect3(f.Near, f.Bottom, f.Left, outCorners, 0);

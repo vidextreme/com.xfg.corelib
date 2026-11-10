@@ -5,22 +5,27 @@ using UnityEngine;
 
 namespace XFG.Math
 {
-    // ------------------------------------------------------------------------------
-    // LineMath
-    // ------------------------------------------------------------------------------
-    // Pure geometric utilities for infinite line operations.
-    // No shape-specific logic lives here.
-    // ------------------------------------------------------------------------------
+    /// <summary>
+    /// Pure geometric utilities for infinite line operations.
+    /// </summary>
+    /// <remarks>
+    /// No shape-specific logic lives here.
+    /// </remarks>
     public static class LineMath
     {
-        // ============================================================
-        // LINE vs LINE
-        // ============================================================
+        // ---------------------------------------------------------------------
+        // Line vs Line
+        // ---------------------------------------------------------------------
         #region LineLine
 
         /// <summary>
         /// Returns squared distance between two infinite lines.
         /// </summary>
+        /// <param name="p1">A point on the first line.</param>
+        /// <param name="d1">The direction of the first line.</param>
+        /// <param name="p2">A point on the second line.</param>
+        /// <param name="d2">The direction of the second line.</param>
+        /// <returns>The squared distance between the closest points of the two lines.</returns>
         public static float LineLineDistanceSq(
             Vector3 p1, Vector3 d1,
             Vector3 p2, Vector3 d2)
@@ -52,14 +57,22 @@ namespace XFG.Math
         #endregion
 
 
-        // ============================================================
-        // LINE vs SEGMENT
-        // ============================================================
+        // ---------------------------------------------------------------------
+        // Line vs Segment
+        // ---------------------------------------------------------------------
         #region LineSegment
 
         /// <summary>
         /// Returns squared distance between an infinite line and a finite segment.
         /// </summary>
+        /// <remarks>
+        /// The line is approximated by a long segment starting at <paramref name="L0"/>.
+        /// </remarks>
+        /// <param name="L0">A point on the line.</param>
+        /// <param name="Ld">The direction of the line.</param>
+        /// <param name="S0">The start point of the segment.</param>
+        /// <param name="S1">The end point of the segment.</param>
+        /// <returns>The squared distance between the line and the segment.</returns>
         public static float LineSegmentDistanceSq(
             Vector3 L0, Vector3 Ld,
             Vector3 S0, Vector3 S1)

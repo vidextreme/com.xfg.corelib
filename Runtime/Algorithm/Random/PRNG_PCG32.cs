@@ -20,6 +20,8 @@ namespace XFG.Algorithm
         /// Creates a new PCG32 generator with the given seed and stream.
         /// The stream value is forced to be odd internally.
         /// </summary>
+        /// <param name="seed">Initial seed value.</param>
+        /// <param name="stream">Stream selector; different streams produce independent sequences.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Pcg32(ulong seed, ulong stream)
         {
@@ -34,6 +36,8 @@ namespace XFG.Algorithm
         /// <summary>
         /// Creates a new PCG32 generator from a 64-bit seed and a default stream.
         /// </summary>
+        /// <param name="seed">Initial seed value.</param>
+        /// <returns>A new generator.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Pcg32 FromSeed(ulong seed)
         {
@@ -44,6 +48,8 @@ namespace XFG.Algorithm
         /// <summary>
         /// Creates a new PCG32 generator from a 32-bit seed.
         /// </summary>
+        /// <param name="seed">Initial seed value.</param>
+        /// <returns>A new generator using the default stream.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Pcg32 FromUInt(uint seed)
         {
@@ -63,6 +69,7 @@ namespace XFG.Algorithm
         /// <summary>
         /// Returns the next 32-bit unsigned integer in the sequence.
         /// </summary>
+        /// <returns>The next 32-bit unsigned integer.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public uint NextUInt()
         {
@@ -78,6 +85,7 @@ namespace XFG.Algorithm
         /// <summary>
         /// Returns a float in the range [0, 1).
         /// </summary>
+        /// <returns>A float in the range [0, 1).</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float NextFloat01()
         {
@@ -88,6 +96,9 @@ namespace XFG.Algorithm
         /// <summary>
         /// Returns a float in the range [min, max).
         /// </summary>
+        /// <param name="min">Inclusive lower bound.</param>
+        /// <param name="max">Exclusive upper bound.</param>
+        /// <returns>A float in the range [min, max).</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float NextFloat(float min, float max)
         {
@@ -97,6 +108,9 @@ namespace XFG.Algorithm
         /// <summary>
         /// Returns an integer in the range [0, maxExclusive).
         /// </summary>
+        /// <param name="maxExclusive">Exclusive upper bound; must be greater than zero.</param>
+        /// <returns>An integer in the range [0, maxExclusive).</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="maxExclusive"/> is zero or negative.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int NextInt(int maxExclusive)
         {
@@ -109,6 +123,10 @@ namespace XFG.Algorithm
         /// <summary>
         /// Returns an integer in the range [minInclusive, maxExclusive).
         /// </summary>
+        /// <param name="minInclusive">Inclusive lower bound.</param>
+        /// <param name="maxExclusive">Exclusive upper bound; must be greater than <paramref name="minInclusive"/>.</param>
+        /// <returns>An integer in the range [minInclusive, maxExclusive).</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="minInclusive"/> is not less than <paramref name="maxExclusive"/>.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int NextInt(int minInclusive, int maxExclusive)
         {
@@ -122,6 +140,7 @@ namespace XFG.Algorithm
         /// Captures the internal PCG32 state so it can be saved and restored later.
         /// Useful for save games, deterministic replays, and network sync.
         /// </summary>
+        /// <returns>A snapshot of the current generator state.</returns>
         public Pcg32State SaveState()
         {
             return new Pcg32State(_state, _increment);
@@ -131,6 +150,8 @@ namespace XFG.Algorithm
         /// Restores a previously saved PCG32 state.
         /// This recreates the exact sequence continuation.
         /// </summary>
+        /// <param name="state">State previously captured with <see cref="SaveState"/>.</param>
+        /// <returns>A generator that continues the saved sequence.</returns>
         public static Pcg32 FromState(Pcg32State state)
         {
             var rng = new Pcg32(0, 1);
@@ -146,9 +167,21 @@ namespace XFG.Algorithm
     /// </summary>
     public readonly struct Pcg32State
     {
+        /// <summary>
+        /// The 64-bit internal state.
+        /// </summary>
         public readonly ulong State;
+
+        /// <summary>
+        /// The 64-bit stream increment (always odd).
+        /// </summary>
         public readonly ulong Increment;
 
+        /// <summary>
+        /// Creates a new state snapshot.
+        /// </summary>
+        /// <param name="state">The 64-bit internal state.</param>
+        /// <param name="increment">The 64-bit stream increment.</param>
         public Pcg32State(ulong state, ulong increment)
         {
             State = state;

@@ -12,43 +12,61 @@ namespace XFG.AI.FSM.Async
 {
     /// <summary>
     /// Async/await extension layer for IStateMachine.
-    ///
+    /// </summary>
+    /// <remarks>
     /// This adds asynchronous state transitions with cancellation support
     /// without modifying the original state machine. States may optionally
     /// implement IAsyncState to participate in async transitions.
     ///
-    /// IMPLEMENTATION OVERVIEW:
-    /// -------------------------
-    /// • Async transitions wrap the synchronous ChangeState call.
-    /// • Each transition receives a cancellation token.
-    /// • A transition token prevents race conditions (late completions).
-    /// • Only states that implement IAsyncState receive async callbacks.
+    /// Implementation overview:
+    /// <list type="bullet">
+    /// <item><description>Async transitions wrap the synchronous ChangeState call.</description></item>
+    /// <item><description>Each transition receives a cancellation token.</description></item>
+    /// <item><description>A transition token prevents race conditions (late completions).</description></item>
+    /// <item><description>Only states that implement IAsyncState receive async callbacks.</description></item>
+    /// </list>
     ///
     /// This design keeps the base FSM simple while enabling async workflows
     /// such as UI fades, ability warm-ups, network handshakes, and scripted
     /// sequences.
-    /// </summary>
+    /// </remarks>
     public static class AsyncStateMachineExtensions
     {
-        // --------------------------------------------------------------------
-        //  ASYNC STATE INTERFACE
-        // --------------------------------------------------------------------
-
+        // ---------------------------------------------------------------------
+        // Async State Interface
+        // ---------------------------------------------------------------------
         /// <summary>
         /// Optional interface for states that support async enter/exit.
         /// </summary>
+        /// <typeparam name="TMachineType">The concrete machine component type.</typeparam>
+        /// <typeparam name="TStateIDType">The state identifier type.</typeparam>
+        /// <typeparam name="TMessageType">The message identifier type.</typeparam>
         public interface IAsyncState<TMachineType, TStateIDType, TMessageType> :
             IStateMachine<TMachineType, TStateIDType, TMessageType>.IState
             where TMachineType : MonoBehaviour
             where TStateIDType : IComparable
             where TMessageType : IComparable
         {
+            /// <summary>
+            /// Called asynchronously when entering this state, after the synchronous transition.
+            /// </summary>
+            /// <param name="prevStateType">The ID of the state that was exited.</param>
+            /// <param name="args">Arguments passed to the transition.</param>
+            /// <param name="token">Cancelled when the transition is superseded or cancelled externally.</param>
+            /// <returns>A task that completes when the enter logic finishes.</returns>
             Task OnStateEnterAsync(
                 TStateIDType prevStateType,
                 object[] args,
                 CancellationToken token
             ) => Task.CompletedTask;
 
+            /// <summary>
+            /// Called asynchronously when exiting this state, before the synchronous transition.
+            /// </summary>
+            /// <param name="nextStateType">The ID of the state being entered.</param>
+            /// <param name="args">Arguments passed to the transition.</param>
+            /// <param name="token">Cancelled when the transition is superseded or cancelled externally.</param>
+            /// <returns>A task that completes when the exit logic finishes.</returns>
             Task OnStateExitAsync(
                 TStateIDType nextStateType,
                 object[] args,
@@ -56,11 +74,9 @@ namespace XFG.AI.FSM.Async
             ) => Task.CompletedTask;
         }
 
-
-        // --------------------------------------------------------------------
-        //  INTERNAL TRANSITION TRACKING
-        // --------------------------------------------------------------------
-
+        // ---------------------------------------------------------------------
+        // Internal Transition Tracking
+        // ---------------------------------------------------------------------
         /// <summary>
         /// Tracks supersession tokens to prevent race conditions.
         /// </summary>
@@ -73,14 +89,21 @@ namespace XFG.AI.FSM.Async
         private static readonly Dictionary<object, CancellationTokenSource> _ctsMap =
             new Dictionary<object, CancellationTokenSource>();
 
-
-        // --------------------------------------------------------------------
-        //  ASYNC CHANGE STATE
-        // --------------------------------------------------------------------
-
+        // ---------------------------------------------------------------------
+        // Async Change State
+        // ---------------------------------------------------------------------
         /// <summary>
         /// Performs an asynchronous state transition with cancellation support.
+        /// Starting a new transition cancels any transition already in flight on the same machine.
         /// </summary>
+        /// <typeparam name="TMachineType">The concrete machine component type.</typeparam>
+        /// <typeparam name="TStateIDType">The state identifier type.</typeparam>
+        /// <typeparam name="TMessageType">The message identifier type.</typeparam>
+        /// <param name="machine">The state machine to transition.</param>
+        /// <param name="nextStateType">The ID of the state to enter.</param>
+        /// <param name="externalToken">Optional token that cancels the transition from outside.</param>
+        /// <param name="args">Arguments forwarded to the exit and enter callbacks.</param>
+        /// <returns>True if the transition completed without being cancelled or superseded; otherwise false.</returns>
         public static async Task<bool> ChangeStateAsync<TMachineType, TStateIDType, TMessageType>(
             this IStateMachine<TMachineType, TStateIDType, TMessageType> machine,
             TStateIDType nextStateType,
@@ -101,7 +124,7 @@ namespace XFG.AI.FSM.Async
             _ctsMap[machine].Cancel();
             _ctsMap[machine] = new CancellationTokenSource();
 
-            // Link external + internal cancellation
+            // Link external and internal cancellation
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
                 externalToken,
                 _ctsMap[machine].Token
@@ -146,14 +169,19 @@ namespace XFG.AI.FSM.Async
                    myToken == _transitionTokens[machine];
         }
 
-
-        // --------------------------------------------------------------------
-        //  SAFE STATE RETRIEVAL
-        // --------------------------------------------------------------------
-
+        // ---------------------------------------------------------------------
+        // Safe State Retrieval
+        // ---------------------------------------------------------------------
         /// <summary>
         /// Retrieves a registered state without exposing internal storage.
         /// </summary>
+        /// <typeparam name="TMachineType">The concrete machine component type.</typeparam>
+        /// <typeparam name="TStateIDType">The state identifier type.</typeparam>
+        /// <typeparam name="TMessageType">The message identifier type.</typeparam>
+        /// <param name="machine">The state machine to query.</param>
+        /// <param name="id">The ID of the state to find.</param>
+        /// <param name="state">The registered state, or null if not found.</param>
+        /// <returns>True if a state with <paramref name="id"/> is registered; otherwise false.</returns>
         public static bool TryGetState<TMachineType, TStateIDType, TMessageType>(
             this IStateMachine<TMachineType, TStateIDType, TMessageType> machine,
             TStateIDType id,
