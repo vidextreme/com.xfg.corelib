@@ -38,7 +38,8 @@ The Collision Module provides deterministic, allocation-free geometric queries f
 
 ### Cone
 - Apex, base center, radius, and height representation
-- Supports point, segment, sphere, capsule (broadphase), and frustum tests
+- Supports point, sphere, capsule (broadphase), cylinder, cone, line, ray, triangle, AABB, and frustum tests
+- `Cone.Axis` is **not normalized**: it runs from apex to base center, so its length equals `Height`. Normalize it before using it as a direction or for projections (`cone.Axis.normalized`).
 
 ### Triangle
 - Barycentric utilities
@@ -116,10 +117,10 @@ The Collision Module provides deterministic, allocation-free geometric queries f
 | Sphere    | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Capsule   | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Cylinder  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Cone      | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Segment   | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Cone      | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ✗ | ✓ |
+| Segment   | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ |
 | Triangle  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| OBB       | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| OBB       | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ |
 | Frustum   | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 
 ---

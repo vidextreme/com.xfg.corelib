@@ -14,6 +14,9 @@ Built for clarity, determinism, and extensibility, with optional Unity/Burst lay
 - [🧠 Utility AI System](#-utility-ai-system)
 - [🎮 Actor–Controller Architecture](#-actorcontroller-architecture)
 - [🏗️ TriScope Runtime System](#-triscope-runtime-system)
+- [🎬 Sequencer System](#-sequencer-system)
+- [🧩 Blackboard System](#-blackboard-system)
+- [🔌 PolymorphicReference](#-polymorphicreference)
 - [📐 Geometry & Math Utilities](#-geometry--math-utilities)
 - [📦 Installation](#-installation)
 - [🗺️ Roadmap](#-roadmap)
@@ -212,6 +215,63 @@ Designed for clarity, testability, and engine-agnostic portability.
 
 ---
 
+### 🎬 Sequencer System
+
+A deterministic, track-based step runner for cutscenes, scripted events, tutorials, and gameplay flow.  
+Steps are authored as serializable data and turned into fresh runtime logic each time a sequence starts.
+
+#### Core Concepts
+- **Sequencer**: owns tracks and sequences; driven by `Update` / `LateUpdate`
+- **Tracks**:
+  - `Universal` tracks always run
+  - `Stack` tracks behave like a priority stack, and the top non-empty track mutes the ones below
+- **Sequence**: an ordered list of steps playing on one track
+- **Step data / logic split**:
+  - `IStepData` is the authored, serialized data
+  - `IStepData.CreateLogic` builds a new `IStepLogic` for every run
+
+#### Runtime Features
+- Sequential and concurrent steps, plus `AllowNext` for overlapping a step with the next one
+- Clear step lifecycle: `Initialize → OnStart → OnTick → OnEnd → Dispose`
+- Graceful (`TryEnd`) or forced stops
+- `Broadcast<T>` messages to running steps (input, dialogue advance, game events)
+- `OnFinished` callback, raised after the sequence is removed from its track
+- Safe re-entrancy: steps may start or stop sequences from their own callbacks
+- Engine-agnostic core with Unity Inspector authoring via `List<Step>`
+
+[Sequencer Readme](Docs/README-Sequencer.md)
+
+---
+
+### 🧩 Blackboard System
+
+A typed key/value store plus priority-ordered **Knowledge Sources** for modular AI reasoning and world-state coordination.
+
+#### Core Features
+- `BlackboardCore<TValue>` with `Has`, `Get`, `TryGet`, `Set`, `Remove`, and copy-on-read `Snapshot`
+- Knowledge Sources run once per `Run()` in descending priority
+- Per-entity `BlackboardAgent<TValue>`, authorable as assets via `BlackboardAgentAsset<TValue>`
+- Validated save/load (`ToSaveData` / `LoadFromSaveData`)
+- Engine-agnostic, with no reflection
+
+[Blackboard Readme](Runtime/Systems/Blackboard/README-Blackboard.md)
+
+---
+
+### 🔌 PolymorphicReference
+
+Serialize references to **interfaces or abstract classes** in Unity and Godot with `PolymorphicReference<T>`.
+
+#### Core Features
+- Resolves the stored engine object to `T` at runtime (GameObjects are searched for a matching component)
+- Unity property drawer with validation, type display, and multi-object editing
+- Picker window with Assets and Scene tabs, search, and a list/grid zoom
+- Godot support through `[Export]`
+
+[PolymorphicReference Readme](Docs/README-PolymorphicReference.md)
+
+---
+
 ### 📐 Geometry & Math Utilities
 
 A clean, engine-agnostic geometry layer providing collision-ready primitives and spatial reasoning tools.
@@ -226,7 +286,7 @@ A clean, engine-agnostic geometry layer providing collision-ready primitives and
 - AABB
 - OBB
 - Frustum
-- Cone
+- Cone (note: `Cone.Axis` is unnormalized, with length equal to `Height`)
 - Cylinder
 - Capsule
 - Sphere

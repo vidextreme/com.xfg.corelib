@@ -31,7 +31,7 @@ namespace XFG.Math.Shape
         private static Vector3 ClosestPointOnConeAxis(this Cone cone, Vector3 p)
         {
             Vector3 apex = cone.Apex;
-            Vector3 axis = cone.Axis;   // Assumed normalized
+            Vector3 axis = cone.Axis.normalized; // Axis has length Height; normalize for projections
             float height = cone.Height;
 
             float t = Vector3.Dot(p - apex, axis);
@@ -43,7 +43,7 @@ namespace XFG.Math.Shape
         private static float LocalConeRadius(this Cone cone, Vector3 axisPoint)
         {
             Vector3 apex = cone.Apex;
-            Vector3 axis = cone.Axis;
+            Vector3 axis = cone.Axis.normalized;
             float height = cone.Height;
             float radius = cone.Radius;
 

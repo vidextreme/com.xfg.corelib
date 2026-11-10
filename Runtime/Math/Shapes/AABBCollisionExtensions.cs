@@ -128,7 +128,7 @@ namespace XFG.Math.Shape
         public static bool Intersects(Bounds a, Cone cone)
         {
             Vector3 apex = cone.Apex;
-            Vector3 axis = cone.Axis;      // Must be normalized
+            Vector3 axis = cone.Axis.normalized; // Axis has length Height; normalize for projections
             float height = cone.Height;
             float radius = cone.Radius;
 

@@ -192,7 +192,7 @@ namespace XFG.Math.Shape
             Cone cone)
         {
             Vector3 apex = cone.Apex;
-            Vector3 axis = cone.Axis;
+            Vector3 axis = cone.Axis.normalized; // Axis has length Height; normalize for projections
             float height = cone.Height;
             float radius = cone.Radius;
 
