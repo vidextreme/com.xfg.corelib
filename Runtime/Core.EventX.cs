@@ -1,466 +1,556 @@
 // Copyright (c) 2026 John David Uy
 // Licensed under the MIT License. See LICENSE for details.
 
+#nullable enable
+
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace XFG
 {
     public static partial class Core
     {
-        // ---------------------------------------------------------------------
-        // Internal Handler List
-        // ---------------------------------------------------------------------
         /// <summary>
-        /// Internal zero-allocation handler list for a specific delegate type.
-        /// Stores a multicast delegate and invokes it without allocations.
-        /// </summary>
-        sealed class HandlerList<TDelegate> where TDelegate : Delegate
-        {
-            private TDelegate? _handlers;
-
-            /// <summary>
-            /// Adds a handler to the list.
-            /// </summary>
-            /// <param name="handler">The handler to add.</param>
-            public void Add(TDelegate handler)
-            {
-                _handlers = (TDelegate?)Delegate.Combine(_handlers, handler);
-            }
-
-            /// <summary>
-            /// Removes a handler from the list.
-            /// </summary>
-            /// <param name="handler">The handler to remove.</param>
-            public void Remove(TDelegate handler)
-            {
-                _handlers = (TDelegate?)Delegate.Remove(_handlers, handler);
-            }
-
-            /// <summary>
-            /// Invokes all handlers using a provided invoker function.
-            /// This avoids reflection and allocations.
-            /// </summary>
-            /// <param name="invoker">Callback that invokes a single handler with the event payload.</param>
-            public void Invoke(Action<TDelegate> invoker)
-            {
-                var h = _handlers;
-                if (h != null)
-                {
-                    foreach (TDelegate d in h.GetInvocationList())
-                        invoker((TDelegate)d);
-                }
-            }
-
-            /// <summary>
-            /// True if no handlers remain.
-            /// </summary>
-            public bool IsEmpty => _handlers == null;
-
-            /// <summary>
-            /// Number of handlers currently registered.
-            /// </summary>
-            public int Count => _handlers?.GetInvocationList().Length ?? 0;
-        }
-
-        // ---------------------------------------------------------------------
-        // Event System Core
-        // ---------------------------------------------------------------------
-        /// <summary>
-        /// Generic event system keyed by KeyType and delegate type.
-        /// Thread-safe and zero-allocation during broadcast.
-        /// </summary>
-        sealed class EventSystem<KeyType, TDelegate> where TDelegate : Delegate
-        {
-            private readonly ConcurrentDictionary<KeyType, HandlerList<TDelegate>> _events =
-                new ConcurrentDictionary<KeyType, HandlerList<TDelegate>>();
-
-            /// <summary>
-            /// Subscribes a handler to the specified event key.
-            /// </summary>
-            /// <param name="key">The event key.</param>
-            /// <param name="handler">The handler to subscribe.</param>
-            public void Subscribe(KeyType key, TDelegate handler)
-            {
-                var list = _events.GetOrAdd(key, _ => new HandlerList<TDelegate>());
-                list.Add(handler);
-            }
-
-            /// <summary>
-            /// Unsubscribes a handler from the specified event key.
-            /// Removes the event entry if no handlers remain.
-            /// </summary>
-            /// <param name="key">The event key.</param>
-            /// <param name="handler">The handler to unsubscribe.</param>
-            public void Unsubscribe(KeyType key, TDelegate handler)
-            {
-                if (_events.TryGetValue(key, out var list))
-                {
-                    list.Remove(handler);
-                    if (list.IsEmpty)
-                        _events.TryRemove(key, out _);
-                }
-            }
-
-            /// <summary>
-            /// Broadcasts an event using a typed invoker.
-            /// </summary>
-            /// <param name="key">The event key.</param>
-            /// <param name="invoker">Callback that invokes a single handler with the event payload.</param>
-            public void Broadcast(KeyType key, Action<TDelegate> invoker)
-            {
-                if (_events.TryGetValue(key, out var list))
-                    list.Invoke(invoker);
-            }
-
-            /// <summary>
-            /// Removes all handlers for a specific event key.
-            /// </summary>
-            /// <param name="key">The event key.</param>
-            public void ClearEvent(KeyType key)
-            {
-                _events.TryRemove(key, out _);
-            }
-
-            /// <summary>
-            /// Removes all events and handlers.
-            /// </summary>
-            public void ClearAll()
-            {
-                _events.Clear();
-            }
-
-            /// <summary>
-            /// Checks whether an event with the specified key exists.
-            /// </summary>
-            /// <param name="key">The event key.</param>
-            /// <returns><c>true</c> if the event exists; otherwise <c>false</c>.</returns>
-            public bool HasEvent(KeyType key)
-            {
-                return _events.ContainsKey(key);
-            }
-
-            /// <summary>
-            /// Gets the number of handlers registered to the event.
-            /// </summary>
-            /// <param name="key">The event key.</param>
-            /// <returns>The handler count, or 0 if the event does not exist.</returns>
-            public int Count(KeyType key)
-            {
-                return _events.TryGetValue(key, out var list) ? list.Count : 0;
-            }
-        }
-
-        // ---------------------------------------------------------------------
-        // EventX Variants (0–4 Parameters)
-        // ---------------------------------------------------------------------
-        /// <summary>
-        /// Zero-allocation event system for events with no parameters.
+        /// Settings and lifetime shared by every <c>EventX&lt;TKey, ...&gt;</c> bus.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// The <c>EventX</c> family is a zero-allocation, thread-safe, strongly-typed
-        /// event system and the foundational event system used throughout com.xfg.corelib.
-        /// It is a lightweight, engine-agnostic dispatcher that avoids reflection,
-        /// <c>params</c> arrays, <c>DynamicInvoke</c>, and per-broadcast allocations.
-        /// It supports any key type (string, enum, struct, EventId, etc.) and any
-        /// delegate signature (<c>Action</c>, <c>Action{T1}</c>, <c>Action{T1, T2}</c>, ...).
+        /// <c>EventX</c> is a static, strongly typed event bus keyed by any equatable key (enum, string, struct) with
+        /// handlers of zero to four parameters. Guarantees:
         /// </para>
-        /// <para>Key goals:</para>
         /// <list type="bullet">
-        /// <item><description>Zero allocations during broadcast.</description></item>
-        /// <item><description>Thread-safe via <c>ConcurrentDictionary</c>.</description></item>
-        /// <item><description>Strongly typed payloads (no <c>object[]</c>, no boxing).</description></item>
-        /// <item><description>No reflection or <c>DynamicInvoke</c>.</description></item>
-        /// <item><description>Minimal API surface and easy onboarding.</description></item>
-        /// <item><description>Suitable for gameplay systems, tools, and Burst-friendly bridges.</description></item>
+        /// <item><description>Subscribe, Unsubscribe and Clear are thread-safe; no registration is ever lost.</description></item>
+        /// <item><description>Broadcast takes no lock and allocates nothing: it iterates an immutable snapshot of the handlers.</description></item>
+        /// <item><description>Changes made during a broadcast (including by a handler) apply from the next broadcast.</description></item>
+        /// <item><description>A handler that throws is logged (see <see cref="ThrowOnHandlerException"/>), and the remaining handlers still run.</description></item>
+        /// <item><description>The same handler may be subscribed more than once; each Unsubscribe removes the latest registration.</description></item>
         /// </list>
+        /// <para>
+        /// Scope: the buses are static, so handlers live until they are unsubscribed or cleared, and are shared by all
+        /// code in the app domain. When Unity domain reload is disabled, static state survives between play sessions;
+        /// call <see cref="ClearAllSystems"/> to drop stale handlers.
+        /// </para>
         /// </remarks>
-        public static class EventX<KeyType>
+        public static class EventX
         {
-            private static readonly EventSystem<KeyType, Action> _sys = new();
+            private static readonly List<IEventSystem> _systems = new();
 
             /// <summary>
-            /// Subscribes a handler to the specified event key.
+            /// When true, an exception thrown by a handler propagates to the broadcaster instead of being reported.
+            /// </summary>
+            public static bool ThrowOnHandlerException { get; set; }
+
+            /// <summary>
+            /// Removes every handler from every EventX bus of this module.
+            /// </summary>
+            public static void ClearAllSystems()
+            {
+                IEventSystem[] systems;
+                lock (_systems)
+                    systems = _systems.ToArray();
+                foreach (IEventSystem system in systems)
+                    system.ClearAll();
+            }
+
+            internal static void Register(IEventSystem system)
+            {
+                lock (_systems)
+                    _systems.Add(system);
+            }
+
+            internal static void Report(Exception exception)
+            {
+#if UNITY_5_3_OR_NEWER
+                UnityEngine.Debug.LogException(exception);
+#elif XGE
+                xg.Debug.LogException(exception);
+#elif GODOT
+                Godot.GD.PushError(exception.ToString());
+#else
+                Core.Error(exception.ToString());
+#endif
+            }
+        }
+
+        internal interface IEventSystem
+        {
+            void ClearAll();
+        }
+
+        /// <summary>
+        /// One subscription to an EventX bus. Dispose it once to unsubscribe; the default value does nothing.
+        /// </summary>
+        public readonly struct Subscription<TKey, TDelegate> : IDisposable where TKey : notnull where TDelegate : Delegate
+        {
+            private readonly EventSystem<TKey, TDelegate>? _system;
+            private readonly TKey _key;
+            private readonly TDelegate? _handler;
+
+            internal Subscription(EventSystem<TKey, TDelegate> system, TKey key, TDelegate handler)
+            {
+                _system = system;
+                _key = key;
+                _handler = handler;
+            }
+
+            /// <summary>
+            /// The subscribed key.
+            /// </summary>
+            public TKey Key => _key;
+
+            /// <summary>
+            /// Unsubscribes the handler (one registration).
+            /// </summary>
+            public void Dispose()
+            {
+                if (_system is not null && _handler is not null)
+                    _system.Unsubscribe(_key, _handler);
+            }
+        }
+
+        /// <summary>
+        /// Copy-on-write handler array: writers lock and publish a new array, readers take the current one.
+        /// </summary>
+        internal sealed class HandlerList<TDelegate> where TDelegate : Delegate
+        {
+            private readonly object _gate = new();
+            private TDelegate[] _handlers = Array.Empty<TDelegate>();
+
+            public TDelegate[] Snapshot => Volatile.Read(ref _handlers);
+
+            public int Count => Snapshot.Length;
+
+            public void Add(TDelegate handler)
+            {
+                lock (_gate)
+                {
+                    TDelegate[] current = _handlers;
+                    TDelegate[] next = new TDelegate[current.Length + 1];
+                    Array.Copy(current, next, current.Length);
+                    next[current.Length] = handler;
+                    Volatile.Write(ref _handlers, next);
+                }
+            }
+
+            public bool Remove(TDelegate handler)
+            {
+                lock (_gate)
+                {
+                    TDelegate[] current = _handlers;
+                    int index = Array.LastIndexOf(current, handler);
+                    if (index < 0)
+                        return false;
+                    if (current.Length == 1)
+                    {
+                        Volatile.Write(ref _handlers, Array.Empty<TDelegate>());
+                        return true;
+                    }
+                    TDelegate[] next = new TDelegate[current.Length - 1];
+                    Array.Copy(current, 0, next, 0, index);
+                    Array.Copy(current, index + 1, next, index, current.Length - index - 1);
+                    Volatile.Write(ref _handlers, next);
+                    return true;
+                }
+            }
+
+            public void Clear()
+            {
+                lock (_gate)
+                    Volatile.Write(ref _handlers, Array.Empty<TDelegate>());
+            }
+        }
+
+        /// <summary>
+        /// Handler lists per key. Lists are never removed, so a concurrent Subscribe can't add to a detached list.
+        /// </summary>
+        internal sealed class EventSystem<TKey, TDelegate> : IEventSystem where TKey : notnull where TDelegate : Delegate
+        {
+            private readonly ConcurrentDictionary<TKey, HandlerList<TDelegate>> _events = new();
+
+            public EventSystem() => EventX.Register(this);
+
+            public Subscription<TKey, TDelegate> Subscribe(TKey key, TDelegate handler)
+            {
+                if (handler is null) throw new ArgumentNullException(nameof(handler));
+                _events.GetOrAdd(key, static _ => new HandlerList<TDelegate>()).Add(handler);
+                return new Subscription<TKey, TDelegate>(this, key, handler);
+            }
+
+            public bool Unsubscribe(TKey key, TDelegate handler)
+            {
+                if (handler is null) throw new ArgumentNullException(nameof(handler));
+                return _events.TryGetValue(key, out HandlerList<TDelegate>? list) && list.Remove(handler);
+            }
+
+            public TDelegate[] Snapshot(TKey key) =>
+                _events.TryGetValue(key, out HandlerList<TDelegate>? list) ? list.Snapshot : Array.Empty<TDelegate>();
+
+            public int Count(TKey key) => _events.TryGetValue(key, out HandlerList<TDelegate>? list) ? list.Count : 0;
+
+            public void ClearEvent(TKey key)
+            {
+                if (_events.TryGetValue(key, out HandlerList<TDelegate>? list))
+                    list.Clear();
+            }
+
+            public void ClearAll()
+            {
+                foreach (HandlerList<TDelegate> list in _events.Values)
+                    list.Clear();
+            }
+        }
+
+        /// <summary>
+        /// Keyed event bus for handlers with no parameters.
+        /// </summary>
+        /// <remarks>See <see cref="EventX"/> for the guarantees shared by every arity.</remarks>
+        public static class EventX<TKey> where TKey : notnull
+        {
+            private static readonly EventSystem<TKey, Action> _sys = new();
+
+            /// <summary>
+            /// Subscribes a handler to the event key. Dispose the returned subscription (once) to unsubscribe.
             /// </summary>
             /// <param name="key">The event key.</param>
             /// <param name="handler">The handler to subscribe.</param>
-            public static void Subscribe(KeyType key, Action handler) =>
+            public static Subscription<TKey, Action> Subscribe(TKey key, Action handler) =>
                 _sys.Subscribe(key, handler);
 
             /// <summary>
-            /// Unsubscribes a handler from the specified event key.
+            /// Unsubscribes one registration of the handler from the event key.
             /// </summary>
             /// <param name="key">The event key.</param>
             /// <param name="handler">The handler to unsubscribe.</param>
-            public static void Unsubscribe(KeyType key, Action handler) =>
+            /// <returns><c>true</c> if the handler was registered.</returns>
+            public static bool Unsubscribe(TKey key, Action handler) =>
                 _sys.Unsubscribe(key, handler);
 
             /// <summary>
-            /// Invokes every handler subscribed to the specified event key.
+            /// Invokes every handler subscribed to the event key, in subscription order.
             /// </summary>
             /// <param name="key">The event key.</param>
-            public static void Broadcast(KeyType key) =>
-                _sys.Broadcast(key, h => h());
+            public static void Broadcast(TKey key)
+            {
+                Action[] handlers = _sys.Snapshot(key);
+                for (int i = 0; i < handlers.Length; i++)
+                {
+                    try
+                    {
+                        handlers[i]();
+                    }
+                    catch (Exception e) when (!EventX.ThrowOnHandlerException)
+                    {
+                        EventX.Report(e);
+                    }
+                }
+            }
 
             /// <summary>
-            /// Removes all handlers for the specified event key.
+            /// Removes all handlers for the event key.
             /// </summary>
             /// <param name="key">The event key.</param>
-            public static void ClearEvent(KeyType key) => _sys.ClearEvent(key);
+            public static void ClearEvent(TKey key) => _sys.ClearEvent(key);
 
             /// <summary>
-            /// Removes all events and handlers for this signature.
+            /// Removes all handlers of this key type and signature.
             /// </summary>
             public static void ClearAll() => _sys.ClearAll();
 
             /// <summary>
-            /// Checks whether an event with the specified key exists.
+            /// Checks whether the event key has at least one handler.
             /// </summary>
             /// <param name="key">The event key.</param>
-            /// <returns><c>true</c> if the event exists; otherwise <c>false</c>.</returns>
-            public static bool HasEvent(KeyType key) => _sys.HasEvent(key);
+            public static bool HasEvent(TKey key) => _sys.Count(key) > 0;
 
             /// <summary>
-            /// Gets the number of handlers registered to the event.
+            /// Gets the number of handlers registered to the event key.
             /// </summary>
             /// <param name="key">The event key.</param>
-            /// <returns>The handler count, or 0 if the event does not exist.</returns>
-            public static int Count(KeyType key) => _sys.Count(key);
+            public static int Count(TKey key) => _sys.Count(key);
         }
 
         /// <summary>
-        /// Zero-allocation event system for events with one parameter.
+        /// Keyed event bus for handlers with one parameter.
         /// </summary>
-        public static class EventX<KeyType, T1>
+        public static class EventX<TKey, T1> where TKey : notnull
         {
-            private static readonly EventSystem<KeyType, Action<T1>> _sys = new();
+            private static readonly EventSystem<TKey, Action<T1>> _sys = new();
 
             /// <summary>
-            /// Subscribes a handler to the specified event key.
+            /// Subscribes a handler to the event key. Dispose the returned subscription (once) to unsubscribe.
             /// </summary>
             /// <param name="key">The event key.</param>
             /// <param name="handler">The handler to subscribe.</param>
-            public static void Subscribe(KeyType key, Action<T1> handler) =>
+            public static Subscription<TKey, Action<T1>> Subscribe(TKey key, Action<T1> handler) =>
                 _sys.Subscribe(key, handler);
 
             /// <summary>
-            /// Unsubscribes a handler from the specified event key.
+            /// Unsubscribes one registration of the handler from the event key.
             /// </summary>
             /// <param name="key">The event key.</param>
             /// <param name="handler">The handler to unsubscribe.</param>
-            public static void Unsubscribe(KeyType key, Action<T1> handler) =>
+            /// <returns><c>true</c> if the handler was registered.</returns>
+            public static bool Unsubscribe(TKey key, Action<T1> handler) =>
                 _sys.Unsubscribe(key, handler);
 
             /// <summary>
-            /// Invokes every handler subscribed to the specified event key.
+            /// Invokes every handler subscribed to the event key, in subscription order.
             /// </summary>
             /// <param name="key">The event key.</param>
             /// <param name="v1">The first event argument.</param>
-            public static void Broadcast(KeyType key, T1 v1) =>
-                _sys.Broadcast(key, h => h(v1));
+            public static void Broadcast(TKey key, T1 v1)
+            {
+                Action<T1>[] handlers = _sys.Snapshot(key);
+                for (int i = 0; i < handlers.Length; i++)
+                {
+                    try
+                    {
+                        handlers[i](v1);
+                    }
+                    catch (Exception e) when (!EventX.ThrowOnHandlerException)
+                    {
+                        EventX.Report(e);
+                    }
+                }
+            }
 
             /// <summary>
-            /// Removes all handlers for the specified event key.
+            /// Removes all handlers for the event key.
             /// </summary>
             /// <param name="key">The event key.</param>
-            public static void ClearEvent(KeyType key) => _sys.ClearEvent(key);
+            public static void ClearEvent(TKey key) => _sys.ClearEvent(key);
 
             /// <summary>
-            /// Removes all events and handlers for this signature.
+            /// Removes all handlers of this key type and signature.
             /// </summary>
             public static void ClearAll() => _sys.ClearAll();
 
             /// <summary>
-            /// Checks whether an event with the specified key exists.
+            /// Checks whether the event key has at least one handler.
             /// </summary>
             /// <param name="key">The event key.</param>
-            /// <returns><c>true</c> if the event exists; otherwise <c>false</c>.</returns>
-            public static bool HasEvent(KeyType key) => _sys.HasEvent(key);
+            public static bool HasEvent(TKey key) => _sys.Count(key) > 0;
 
             /// <summary>
-            /// Gets the number of handlers registered to the event.
+            /// Gets the number of handlers registered to the event key.
             /// </summary>
             /// <param name="key">The event key.</param>
-            /// <returns>The handler count, or 0 if the event does not exist.</returns>
-            public static int Count(KeyType key) => _sys.Count(key);
+            public static int Count(TKey key) => _sys.Count(key);
         }
 
         /// <summary>
-        /// Zero-allocation event system for events with two parameters.
+        /// Keyed event bus for handlers with two parameters.
         /// </summary>
-        public static class EventX<KeyType, T1, T2>
+        public static class EventX<TKey, T1, T2> where TKey : notnull
         {
-            private static readonly EventSystem<KeyType, Action<T1, T2>> _sys = new();
+            private static readonly EventSystem<TKey, Action<T1, T2>> _sys = new();
 
             /// <summary>
-            /// Subscribes a handler to the specified event key.
+            /// Subscribes a handler to the event key. Dispose the returned subscription (once) to unsubscribe.
             /// </summary>
             /// <param name="key">The event key.</param>
             /// <param name="handler">The handler to subscribe.</param>
-            public static void Subscribe(KeyType key, Action<T1, T2> handler) =>
+            public static Subscription<TKey, Action<T1, T2>> Subscribe(TKey key, Action<T1, T2> handler) =>
                 _sys.Subscribe(key, handler);
 
             /// <summary>
-            /// Unsubscribes a handler from the specified event key.
+            /// Unsubscribes one registration of the handler from the event key.
             /// </summary>
             /// <param name="key">The event key.</param>
             /// <param name="handler">The handler to unsubscribe.</param>
-            public static void Unsubscribe(KeyType key, Action<T1, T2> handler) =>
+            /// <returns><c>true</c> if the handler was registered.</returns>
+            public static bool Unsubscribe(TKey key, Action<T1, T2> handler) =>
                 _sys.Unsubscribe(key, handler);
 
             /// <summary>
-            /// Invokes every handler subscribed to the specified event key.
+            /// Invokes every handler subscribed to the event key, in subscription order.
             /// </summary>
             /// <param name="key">The event key.</param>
             /// <param name="v1">The first event argument.</param>
             /// <param name="v2">The second event argument.</param>
-            public static void Broadcast(KeyType key, T1 v1, T2 v2) =>
-                _sys.Broadcast(key, h => h(v1, v2));
+            public static void Broadcast(TKey key, T1 v1, T2 v2)
+            {
+                Action<T1, T2>[] handlers = _sys.Snapshot(key);
+                for (int i = 0; i < handlers.Length; i++)
+                {
+                    try
+                    {
+                        handlers[i](v1, v2);
+                    }
+                    catch (Exception e) when (!EventX.ThrowOnHandlerException)
+                    {
+                        EventX.Report(e);
+                    }
+                }
+            }
 
             /// <summary>
-            /// Removes all handlers for the specified event key.
+            /// Removes all handlers for the event key.
             /// </summary>
             /// <param name="key">The event key.</param>
-            public static void ClearEvent(KeyType key) => _sys.ClearEvent(key);
+            public static void ClearEvent(TKey key) => _sys.ClearEvent(key);
 
             /// <summary>
-            /// Removes all events and handlers for this signature.
+            /// Removes all handlers of this key type and signature.
             /// </summary>
             public static void ClearAll() => _sys.ClearAll();
 
             /// <summary>
-            /// Checks whether an event with the specified key exists.
+            /// Checks whether the event key has at least one handler.
             /// </summary>
             /// <param name="key">The event key.</param>
-            /// <returns><c>true</c> if the event exists; otherwise <c>false</c>.</returns>
-            public static bool HasEvent(KeyType key) => _sys.HasEvent(key);
+            public static bool HasEvent(TKey key) => _sys.Count(key) > 0;
 
             /// <summary>
-            /// Gets the number of handlers registered to the event.
+            /// Gets the number of handlers registered to the event key.
             /// </summary>
             /// <param name="key">The event key.</param>
-            /// <returns>The handler count, or 0 if the event does not exist.</returns>
-            public static int Count(KeyType key) => _sys.Count(key);
+            public static int Count(TKey key) => _sys.Count(key);
         }
 
         /// <summary>
-        /// Zero-allocation event system for events with three parameters.
+        /// Keyed event bus for handlers with three parameters.
         /// </summary>
-        public static class EventX<KeyType, T1, T2, T3>
+        public static class EventX<TKey, T1, T2, T3> where TKey : notnull
         {
-            private static readonly EventSystem<KeyType, Action<T1, T2, T3>> _sys = new();
+            private static readonly EventSystem<TKey, Action<T1, T2, T3>> _sys = new();
 
             /// <summary>
-            /// Subscribes a handler to the specified event key.
+            /// Subscribes a handler to the event key. Dispose the returned subscription (once) to unsubscribe.
             /// </summary>
             /// <param name="key">The event key.</param>
             /// <param name="handler">The handler to subscribe.</param>
-            public static void Subscribe(KeyType key, Action<T1, T2, T3> handler) =>
+            public static Subscription<TKey, Action<T1, T2, T3>> Subscribe(TKey key, Action<T1, T2, T3> handler) =>
                 _sys.Subscribe(key, handler);
 
             /// <summary>
-            /// Unsubscribes a handler from the specified event key.
+            /// Unsubscribes one registration of the handler from the event key.
             /// </summary>
             /// <param name="key">The event key.</param>
             /// <param name="handler">The handler to unsubscribe.</param>
-            public static void Unsubscribe(KeyType key, Action<T1, T2, T3> handler) =>
+            /// <returns><c>true</c> if the handler was registered.</returns>
+            public static bool Unsubscribe(TKey key, Action<T1, T2, T3> handler) =>
                 _sys.Unsubscribe(key, handler);
 
             /// <summary>
-            /// Invokes every handler subscribed to the specified event key.
+            /// Invokes every handler subscribed to the event key, in subscription order.
             /// </summary>
             /// <param name="key">The event key.</param>
             /// <param name="v1">The first event argument.</param>
             /// <param name="v2">The second event argument.</param>
             /// <param name="v3">The third event argument.</param>
-            public static void Broadcast(KeyType key, T1 v1, T2 v2, T3 v3) =>
-                _sys.Broadcast(key, h => h(v1, v2, v3));
+            public static void Broadcast(TKey key, T1 v1, T2 v2, T3 v3)
+            {
+                Action<T1, T2, T3>[] handlers = _sys.Snapshot(key);
+                for (int i = 0; i < handlers.Length; i++)
+                {
+                    try
+                    {
+                        handlers[i](v1, v2, v3);
+                    }
+                    catch (Exception e) when (!EventX.ThrowOnHandlerException)
+                    {
+                        EventX.Report(e);
+                    }
+                }
+            }
 
             /// <summary>
-            /// Removes all handlers for the specified event key.
+            /// Removes all handlers for the event key.
             /// </summary>
             /// <param name="key">The event key.</param>
-            public static void ClearEvent(KeyType key) => _sys.ClearEvent(key);
+            public static void ClearEvent(TKey key) => _sys.ClearEvent(key);
 
             /// <summary>
-            /// Removes all events and handlers for this signature.
+            /// Removes all handlers of this key type and signature.
             /// </summary>
             public static void ClearAll() => _sys.ClearAll();
 
             /// <summary>
-            /// Checks whether an event with the specified key exists.
+            /// Checks whether the event key has at least one handler.
             /// </summary>
             /// <param name="key">The event key.</param>
-            /// <returns><c>true</c> if the event exists; otherwise <c>false</c>.</returns>
-            public static bool HasEvent(KeyType key) => _sys.HasEvent(key);
+            public static bool HasEvent(TKey key) => _sys.Count(key) > 0;
 
             /// <summary>
-            /// Gets the number of handlers registered to the event.
+            /// Gets the number of handlers registered to the event key.
             /// </summary>
             /// <param name="key">The event key.</param>
-            /// <returns>The handler count, or 0 if the event does not exist.</returns>
-            public static int Count(KeyType key) => _sys.Count(key);
+            public static int Count(TKey key) => _sys.Count(key);
         }
 
         /// <summary>
-        /// Zero-allocation event system for events with four parameters.
+        /// Keyed event bus for handlers with four parameters.
         /// </summary>
-        public static class EventX<KeyType, T1, T2, T3, T4>
+        public static class EventX<TKey, T1, T2, T3, T4> where TKey : notnull
         {
-            private static readonly EventSystem<KeyType, Action<T1, T2, T3, T4>> _sys = new();
+            private static readonly EventSystem<TKey, Action<T1, T2, T3, T4>> _sys = new();
 
             /// <summary>
-            /// Subscribes a handler to the specified event key.
+            /// Subscribes a handler to the event key. Dispose the returned subscription (once) to unsubscribe.
             /// </summary>
             /// <param name="key">The event key.</param>
             /// <param name="handler">The handler to subscribe.</param>
-            public static void Subscribe(KeyType key, Action<T1, T2, T3, T4> handler) =>
+            public static Subscription<TKey, Action<T1, T2, T3, T4>> Subscribe(TKey key, Action<T1, T2, T3, T4> handler) =>
                 _sys.Subscribe(key, handler);
 
             /// <summary>
-            /// Unsubscribes a handler from the specified event key.
+            /// Unsubscribes one registration of the handler from the event key.
             /// </summary>
             /// <param name="key">The event key.</param>
             /// <param name="handler">The handler to unsubscribe.</param>
-            public static void Unsubscribe(KeyType key, Action<T1, T2, T3, T4> handler) =>
+            /// <returns><c>true</c> if the handler was registered.</returns>
+            public static bool Unsubscribe(TKey key, Action<T1, T2, T3, T4> handler) =>
                 _sys.Unsubscribe(key, handler);
 
             /// <summary>
-            /// Invokes every handler subscribed to the specified event key.
+            /// Invokes every handler subscribed to the event key, in subscription order.
             /// </summary>
             /// <param name="key">The event key.</param>
             /// <param name="v1">The first event argument.</param>
             /// <param name="v2">The second event argument.</param>
             /// <param name="v3">The third event argument.</param>
             /// <param name="v4">The fourth event argument.</param>
-            public static void Broadcast(KeyType key, T1 v1, T2 v2, T3 v3, T4 v4) =>
-                _sys.Broadcast(key, h => h(v1, v2, v3, v4));
+            public static void Broadcast(TKey key, T1 v1, T2 v2, T3 v3, T4 v4)
+            {
+                Action<T1, T2, T3, T4>[] handlers = _sys.Snapshot(key);
+                for (int i = 0; i < handlers.Length; i++)
+                {
+                    try
+                    {
+                        handlers[i](v1, v2, v3, v4);
+                    }
+                    catch (Exception e) when (!EventX.ThrowOnHandlerException)
+                    {
+                        EventX.Report(e);
+                    }
+                }
+            }
 
             /// <summary>
-            /// Removes all handlers for the specified event key.
+            /// Removes all handlers for the event key.
             /// </summary>
             /// <param name="key">The event key.</param>
-            public static void ClearEvent(KeyType key) => _sys.ClearEvent(key);
+            public static void ClearEvent(TKey key) => _sys.ClearEvent(key);
 
             /// <summary>
-            /// Removes all events and handlers for this signature.
+            /// Removes all handlers of this key type and signature.
             /// </summary>
             public static void ClearAll() => _sys.ClearAll();
 
             /// <summary>
-            /// Checks whether an event with the specified key exists.
+            /// Checks whether the event key has at least one handler.
             /// </summary>
             /// <param name="key">The event key.</param>
-            /// <returns><c>true</c> if the event exists; otherwise <c>false</c>.</returns>
-            public static bool HasEvent(KeyType key) => _sys.HasEvent(key);
+            public static bool HasEvent(TKey key) => _sys.Count(key) > 0;
 
             /// <summary>
-            /// Gets the number of handlers registered to the event.
+            /// Gets the number of handlers registered to the event key.
             /// </summary>
             /// <param name="key">The event key.</param>
-            /// <returns>The handler count, or 0 if the event does not exist.</returns>
-            public static int Count(KeyType key) => _sys.Count(key);
+            public static int Count(TKey key) => _sys.Count(key);
         }
     }
 }

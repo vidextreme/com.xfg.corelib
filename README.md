@@ -47,8 +47,10 @@ A zero-allocation, thread-safe, strongly-typed event system for com.xfg.corelib.
 #### Core Features
 - Supports any KeyType (string, enum, struct, EventId, etc.)
 - Strongly-typed delegates (Action, Action<T1>, Action<T1,T2>, Action<T1,T2,T3>, Action<T1,T2,T3,T4>)
-- Zero allocations during broadcast
-- Thread-safe via ConcurrentDictionary
+- Zero allocations and no locks during broadcast (immutable handler snapshots)
+- Thread-safe Subscribe / Unsubscribe / Clear (copy-on-write)
+- Disposable `Subscription` handles returned by `Subscribe`
+- Exception isolation: a failing handler is logged and the others still run
 - Up to 4 parameters per event
 - Engine-agnostic C# core with optional Unity integration
 

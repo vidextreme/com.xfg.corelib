@@ -41,9 +41,11 @@ It aligns with the XFG library’s mission: **simple, explicit, maintainable sys
 ### Simple, predictable, and strongly typed.
 
 - Events are keyed by a type you choose (enum, struct, string…)  
-- Handlers are stored in a thread‑safe dictionary  
-- Broadcasts invoke delegates directly — no reflection  
+- Handlers are stored per key in copy‑on‑write arrays; registration is thread‑safe  
+- Broadcasts iterate an immutable snapshot and invoke delegates directly, with no lock and no reflection  
 - Zero allocations during dispatch  
+- `Subscribe` returns a disposable `Subscription` for clean unsubscribing  
+- A throwing handler is logged and the remaining handlers still run  
 - Supports 0–4 parameters  
 
 Example:

@@ -13,8 +13,10 @@ for real‑time games, tools, and Burst‑friendly pipelines.
 The system supports:
 - Any **KeyType** (string, enum, struct, EventId, etc.)
 - Strongly‑typed delegates (`Action`, `Action<T1>`, `Action<T1,T2>`, …)
-- Zero allocations during broadcast
-- Thread‑safe operations via `ConcurrentDictionary`
+- Lock‑free, zero‑allocation broadcast over an immutable handler snapshot
+- Thread‑safe Subscribe / Unsubscribe / Clear
+- Disposable `Subscription` handles for easy unsubscribing
+- Exception isolation: one failing handler doesn't stop the others
 - Up to **4 parameters** per event
 
 This is the foundational event system used throughout **com.xfg.corelib**.
@@ -23,11 +25,17 @@ This is the foundational event system used throughout **com.xfg.corelib**.
 
 ## ✨ Key Features
 
-- 🚀 **Zero‑allocation broadcast**  
-  No `params`, no boxing, no reflection, no `DynamicInvoke`.
+- 🚀 **Zero‑allocation, lock‑free broadcast**  
+  No `params`, no boxing, no reflection, no `DynamicInvoke`, no closures. Broadcast iterates an immutable snapshot of the handlers without taking a lock.
 
-- 🔒 **Thread‑safe**  
-  Uses `ConcurrentDictionary` internally.
+- 🔒 **Thread‑safe registration**  
+  Subscribe, Unsubscribe, and Clear lock briefly and publish a new handler array (copy‑on‑write), so no registration is ever lost, even under contention.
+
+- 🧹 **Disposable subscriptions**  
+  `Subscribe` returns a `Subscription` you can `Dispose()` to unsubscribe.
+
+- 🛡️ **Exception isolation**  
+  A throwing handler is logged and the remaining handlers still run (configurable).
 
 - 🎯 **Strongly typed**  
   Payloads are compile‑time typed — no casting or object arrays.
@@ -109,14 +117,94 @@ Core.EventX<string, int, float, bool, string>.Broadcast("Hit", 10, 2.0f, true, "
 ```
 ---
 
-## 🔍 Introspection API
-```csharp
-bool exists = Core.EventX<string>.HasEvent("OnStart");
-int count = Core.EventX<string>.Count("OnStart");
+## 🧹 Subscriptions & Unsubscribing
 
-Core.EventX<string>.ClearEvent("OnStart");
-Core.EventX<string>.ClearAll();
+`Subscribe` returns a `Core.Subscription<TKey, TDelegate>`. Dispose it to remove that registration:
+
+```csharp
+public class HealthBar : MonoBehaviour
+{
+    private Core.Subscription<GameEvent, Action<int>> _damageSub;
+
+    private void OnEnable()
+    {
+        _damageSub = Core.EventX<GameEvent, int>.Subscribe(GameEvent.DamageTaken, OnDamageTaken);
+    }
+
+    private void OnDisable()
+    {
+        _damageSub.Dispose();
+    }
+
+    private void OnDamageTaken(int amount) { /* ... */ }
+}
 ```
+
+- `Subscription.Key` returns the subscribed key.  
+- Dispose a subscription **once**. Each `Dispose()` removes one registration of that handler.  
+- A `default` subscription does nothing when disposed, so an unassigned field is safe to dispose.  
+
+You can also unsubscribe directly. `Unsubscribe` returns `true` if the handler was registered:
+
+```csharp
+bool removed = Core.EventX<GameEvent, int>.Unsubscribe(GameEvent.DamageTaken, OnDamageTaken);
+```
+
+Passing a `null` handler to `Subscribe` or `Unsubscribe` throws `ArgumentNullException`.
+
+### Duplicate subscriptions
+
+The same handler may be subscribed more than once; it is then invoked once per registration. Each `Unsubscribe` (or `Dispose`) removes the **most recent** registration.
+
+> Tip: subscribing a method group (`OnDamageTaken`) creates a new delegate each time, but `Unsubscribe` still matches it, because delegates compare equal when they target the same method and instance.
+
+---
+
+## 📡 Broadcast Semantics
+
+- Handlers run **in subscription order**.  
+- Broadcast takes **no lock** and **allocates nothing**: it reads the current immutable handler array and iterates it.  
+- Changes made **during** a broadcast, including by a handler (subscribing, unsubscribing, clearing), take effect from the **next** broadcast. The broadcast in progress still calls every handler from its snapshot.  
+- Broadcasting a key with no handlers is a cheap no‑op.  
+
+### Handler exceptions
+
+By default, if a handler throws, the exception is logged and the remaining handlers still run:
+
+```csharp
+// Default: report and continue
+Core.EventX.ThrowOnHandlerException = false;
+
+// Debugging / tests: let the exception reach the broadcaster (remaining handlers are skipped)
+Core.EventX.ThrowOnHandlerException = true;
+```
+
+`ThrowOnHandlerException` is a global setting shared by every `EventX` bus.
+
+---
+
+## 🔍 Introspection & Clearing API
+```csharp
+bool exists = Core.EventX<string>.HasEvent("OnStart");   // at least one handler
+int count = Core.EventX<string>.Count("OnStart");        // number of registrations
+
+Core.EventX<string>.ClearEvent("OnStart");  // one key of this bus
+Core.EventX<string>.ClearAll();             // every key of this bus (this key type + signature)
+
+Core.EventX.ClearAllSystems();              // every key of every EventX bus
+```
+
+Each combination of key type and parameter types is a separate bus: `EventX<string>` and `EventX<string, int>` don't share handlers, even for the same key.
+
+---
+
+## ♻️ Lifetime
+
+The buses are **static**, so handlers live until they are unsubscribed or cleared.
+
+- Always unsubscribe (or dispose the `Subscription`) when the subscriber is destroyed, otherwise the bus keeps it alive and keeps calling it.  
+- In Unity, if **Enter Play Mode Options** disables domain reload, static state survives between play sessions. Call `Core.EventX.ClearAllSystems()` when play mode starts or ends to drop stale handlers.  
+- Subscribe and Unsubscribe allocate a new handler array (copy‑on‑write). That keeps broadcasts allocation‑free; avoid subscribing and unsubscribing every frame.  
 
 ## 🧩 Usage With Enums (Recommended)
 
